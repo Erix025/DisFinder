@@ -1,8 +1,10 @@
 # 设计文档
 
-## 项目背景
+## 项目概述
 
 随着电子商务的快速发展，各种电商平台层出不穷，同一个商品在不同的平台上价格差异很大，用户往往需要在多个平台上比价才能找到最优惠的商品。本项目旨在为用户提供一个商品比价的工具，用户可以通过输入商品名称，获取该商品在不同电商平台上的价格信息，从而帮助用户快速找到最优惠的商品。
+
+本项目名为 “寻惠” (DisFinder)，旨在帮助用户找到最优惠的商品。
 
 ## 项目总体需求
 
@@ -76,8 +78,6 @@
     - Account
     - Password
 
-### 数据库设计
-
 由于我使用 GORM 进行数据库操作，因此只需要在 GO 中定义好数据模型，GORM 会自动创建对应的表。
 
 ```go
@@ -96,8 +96,10 @@ type Product struct {
 	ID          uint   `json:"id" gorm:"column:id;primary_key;AUTO_INCREMENT"`
 	Name        string `json:"name" gorm:"column:name;type:varchar(255);not null"`
 	Description string `json:"description" gorm:"column:description;type:varchar(1023);not null"`
+	Picture     string `json:"picture" gorm:"column:picture;type:varchar(255);not null"`
 	Users       []User `json:"users" gorm:"many2many:wishlists;"`
 }
+
 ```
 
 ```go
@@ -129,6 +131,42 @@ type UserPlatform struct {
 
 ## 接口设计
 
+我使用 Apifox 工具进行接口设计，对数据模型和接口进行统一管理。
 
+[Apifox 接口文档](https://apifox.com/apidoc/project-5427055/)
+
+![Apifox 接口文档展示](assets/design/apifox.png)
+
+### 用户信息接口
+
+- 用户注册
+- 用户登录
+- 修改密码
+- 用户信息查询
+- 用户信息修改
+- 登出
+
+### 电商平台账户接口
+
+- 查询电商平台账户信息
+- 绑定电商平台账户
+- 解绑电商平台账户
+- 修改电商平台账户信息
+
+### 电商平台接口
+
+- 获取所有电商平台
+
+### 心愿单接口
+
+- 查询心愿单
+- 从心愿单中删除商品
+- 添加商品到心愿单
+
+### 商品接口
+
+- 查询商品信息 
+- 查询商品历史价格信息
+- 批量获取商品
 
 ## 开发计划
