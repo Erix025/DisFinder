@@ -1,17 +1,20 @@
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Link, Input, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar } from "@nextui-org/react";
+'use client';  // 表明该组件在客户端渲染
+
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Link, Input, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar, Button } from "@nextui-org/react";
 import { AcmeLogo } from "./AcmeLogo.jsx";
 import { SearchIcon } from "./SearchIcon.jsx";
+import { WishlistIcon } from "./WishlistIcon.jsx";
 
 export default function App() {
     return (
-        <Navbar isBordered>
+        <Navbar isBordered className="text-foreground bg-background">
             <NavbarContent justify="start">
                 <NavbarBrand className="mr-4">
                     <AcmeLogo />
-                    <p className="hidden sm:block font-bold text-inherit">ACME</p>
+                    <p className="hidden sm:block font-bold text-inherit">DisFinder</p>
                 </NavbarBrand>
                 <NavbarContent className="hidden sm:flex gap-3">
-                    <NavbarItem>
+                    {/* <NavbarItem>
                         <Link color="foreground" href="#">
                             Features
                         </Link>
@@ -25,12 +28,12 @@ export default function App() {
                         <Link color="foreground" href="#">
                             Integrations
                         </Link>
-                    </NavbarItem>
+                    </NavbarItem> */}
                 </NavbarContent>
             </NavbarContent>
 
             <NavbarContent as="div" className="items-center" justify="end">
-                <Input
+                {/* <Input
                     classNames={{
                         base: "max-w-full sm:max-w-[10rem] h-10",
                         mainWrapper: "h-full",
@@ -41,7 +44,12 @@ export default function App() {
                     size="sm"
                     startContent={<SearchIcon size={18} />}
                     type="search"
-                />
+                /> */}
+
+                <Button color="danger" variant="bordered" aria-label="Wishlist" startContent={<WishlistIcon />}>
+                    Wishlist
+                </Button>
+
                 <Dropdown placement="bottom-end" className="text-foreground bg-background">
                     <DropdownTrigger>
                         <Avatar

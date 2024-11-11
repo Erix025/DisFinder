@@ -11,16 +11,15 @@ export default function HomePage() {
       {/* 渲染导航栏 */}
       <MyNavbar />
 
+      {/* 渲染 DisFinder 标题 */}
+      <div className="flex justify-center items-center mt-10 h-[30vh]">
+        <h1 className="text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-500 via-pink-500 to-red-500">
+          DisFinder
+        </h1>
+      </div>
+
       {/* 渲染搜索框 */}
       <SearchBox />
-
-      <ThemeSwitcher />
-
-      {/* 你可以在这里添加其他内容，例如展示商品列表 */}
-      <div className="mt-8 text-center">
-        <h2 className="text-2xl font-bold">热门商品</h2>
-        {/* 在这里展示商品列表 */}
-      </div>
     </div>
   );
 }
