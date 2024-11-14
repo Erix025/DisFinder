@@ -182,16 +182,39 @@ type UserPlatform struct {
 - 商品详情页面
 - 心愿单页面
 
+以下是页面设计草案，不代表最终效果。
+
 ##### 主页面
 
-##### 用户登录界面
+![主界面示例](assets/design/homepage.png)
+
+##### 用户登录/注册界面
+
+![用户登录/注册界面示例](assets/design/authpage.png)
 
 ##### 用户信息界面
 
+![用户信息界面示例](assets/design/userpage.png)
+
 ##### 商品搜索界面
+
+![商品搜索界面示例](assets/design/searchpage.png)
 
 ##### 商品详情界面
 
+![商品详情界面示例](assets/design/productpage.png)
+
 ##### 心愿单界面
 
+![心愿单界面示例](assets/design/wishlistpage.png)
+
+##### 夜间模式
+
+![夜间模式示例](assets/design/darkmode.png)
+
 ## 开发计划
+
+- 冬 3 周：完成数据采集模块
+- 冬 4 周 - 冬 5 周：完成后端，包括 API 响应模块、数据库模块、定时任务模块
+- 冬 6 周 - 冬 7 周：完成前端，包括页面设计、前端逻辑，并与后端对接
+- 冬 8 周：测试、部署、优化、完善文档
