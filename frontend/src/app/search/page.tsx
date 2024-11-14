@@ -10,42 +10,42 @@ import { useEffect, useState } from 'react';
 const mockResults = [
     {
         title: "Orange",
-        img: "/images/fruit-1.jpeg",
+        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
         price: "$5.50",
     },
     {
         title: "Tangerine",
-        img: "/images/fruit-2.jpeg",
+        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
         price: "$3.00",
     },
     {
         title: "Raspberry",
-        img: "/images/fruit-3.jpeg",
+        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
         price: "$10.00",
     },
     {
         title: "Lemon",
-        img: "/images/fruit-4.jpeg",
+        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
         price: "$5.30",
     },
     {
         title: "Avocado",
-        img: "/images/fruit-5.jpeg",
+        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
         price: "$15.70",
     },
     {
         title: "Lemon 2",
-        img: "/images/fruit-6.jpeg",
+        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
         price: "$8.00",
     },
     {
         title: "Banana",
-        img: "/images/fruit-7.jpeg",
+        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
         price: "$7.50",
     },
     {
         title: "Watermelon",
-        img: "/images/fruit-8.jpeg",
+        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
         price: "$12.20",
     },
 ];

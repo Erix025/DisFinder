@@ -4,7 +4,7 @@
 import Navbar from '../../components/Navbar';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, Button } from '@nextui-org/react';
+import { Input, Button, Card, CardBody } from '@nextui-org/react';
 
 export default function UserProfile() {
     const user = {
@@ -33,30 +33,32 @@ export default function UserProfile() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen text-foreground bg-background">
             {/* 导航栏 */}
             <Navbar />
 
             {/* 用户信息内容 */}
-            <div className="max-w-md mx-auto mt-10 p-6 rounded-lg shadow-md text-foreground bg-background">
-                <h2 className="text-2xl font-bold mb-4 text-center">Profile</h2>
-                <ul className="space-y-4">
-                    <li className="flex justify-between items-center">
-                        <span className="font-semibold">Username</span>
-                        <span>{user.name}</span>
-                    </li>
-                    <li className="flex justify-between items-center">
-                        <span className="font-semibold">Email</span>
-                        <span>{user.email}</span>
-                    </li>
-                    <li className="flex justify-between items-center">
-                        <span className="font-semibold">Password</span>
-                        <Button onClick={handleEditPassword} color='primary'>
-                            Modify
-                        </Button>
-                    </li>
-                </ul>
-            </div>
+            <Card className="max-w-md mx-auto mt-10 p-6 rounded-lg shadow-lg bg-default-50">
+                <CardBody>
+                    <h2 className="text-2xl font-bold mb-4 text-center">Profile</h2>
+                    <ul className="space-y-4">
+                        <li className="flex justify-between items-center">
+                            <span className="font-semibold">Username</span>
+                            <span>{user.name}</span>
+                        </li>
+                        <li className="flex justify-between items-center">
+                            <span className="font-semibold">Email</span>
+                            <span>{user.email}</span>
+                        </li>
+                        <li className="flex justify-between items-center">
+                            <span className="font-semibold">Password</span>
+                            <Button onClick={handleEditPassword} color='primary'>
+                                Modify
+                            </Button>
+                        </li>
+                    </ul>
+                </CardBody>
+            </Card>
         </div>
     );
 }

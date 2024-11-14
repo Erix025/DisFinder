@@ -1,88 +1,76 @@
 // app/auth/page.tsx
 'use client';
 
-import { useState } from 'react';
-import { Input, Button, Tabs, Tab } from '@nextui-org/react';
+import React from 'react';
+import { Tabs, Tab, Input, Link, Button, Card, CardBody, CardHeader } from "@nextui-org/react";
 import Navbar from '../../components/Navbar';
 
 export default function AuthPage() {
-    const [isLogin, setIsLogin] = useState(true);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [username, setUsername] = useState('');
-
-    const handleLogin = () => {
-        console.log('Login information:', { email, password });
-        // Handle login logic here
-    };
-
-    const handleRegister = () => {
-        console.log('Registration information:', { username, email, password });
-        // Handle registration logic here
-    };
+    const [selected, setSelected] = React.useState("login");
 
     return (
         <div className="min-h-screen text-foreground bg-background">
             {/* Navbar */}
             <Navbar />
-            <div className='max-w-3xl mt-10 mx-auto max-w-md'>
-                <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-                    <Tabs aria-label="Login/Register Tabs">
-                        <Tab key="login" title="Login">
-                            <div className="space-y-4 mt-4">
-                                <Input
-                                    label="Email"
-                                    type="email"
-                                    placeholder="Enter email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                                <Input
-                                    label="Password"
-                                    type="password"
-                                    placeholder="Enter password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                                <Button onClick={handleLogin} className="mt-4 max-w-xs mx-auto" color="primary" variant="solid">
-                                    Login
-                                </Button>
-                            </div>
-                        </Tab>
-                        <Tab key="register" title="Register">
-                            <div className="space-y-4 mt-4">
-                                <Input
-                                    label="Username"
-                                    type="text"
-                                    placeholder="Enter username"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    required
-                                />
-                                <Input
-                                    label="Email"
-                                    type="email"
-                                    placeholder="Enter email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                                <Input
-                                    label="Password"
-                                    type="password"
-                                    placeholder="Enter password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                                <Button onClick={handleRegister} className="mt-4 max-w-xs mx-auto" color="primary" variant="solid">
-                                    Register
-                                </Button>
-                            </div>
-                        </Tab>
-                    </Tabs>
+            <div className='max-w-3xl mt-20 mx-auto max-w-md'>
+                <div className="flex flex-col w-full">
+                    <Card className="max-w-full w-[340px] h-[400px]">
+                        <CardBody className="overflow-hidden">
+                            <Tabs
+                                fullWidth
+                                size="md"
+                                aria-label="Tabs form"
+                                selectedKey={selected}
+                                onSelectionChange={setSelected}
+                            >
+                                <Tab key="login" title="Login">
+                                    <form className="flex flex-col gap-4 h-full">
+                                        <Input isRequired label="Email" placeholder="Enter your email" type="email" />
+                                        <Input
+                                            isRequired
+                                            label="Password"
+                                            placeholder="Enter your password"
+                                            type="password"
+                                        />
+                                        <p className="text-center text-small">
+                                            Need to create an account?{" "}
+                                            <Link size="sm" onPress={() => setSelected("sign-up")}>
+                                                Sign up
+                                            </Link>
+                                        </p>
+                                        <div className="flex gap-2 justify-end">
+                                            <Button fullWidth color="primary">
+                                                Login
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </Tab>
+                                <Tab key="sign-up" title="Sign up">
+                                    <form className="flex flex-col gap-4 h-[300px]">
+                                        <Input isRequired label="Name" placeholder="Enter your name" type="password" />
+                                        <Input isRequired label="Email" placeholder="Enter your email" type="email" />
+                                        <Input
+                                            isRequired
+                                            label="Password"
+                                            placeholder="Enter your password"
+                                            type="password"
+                                        />
+                                        <p className="text-center text-small">
+                                            Already have an account?{" "}
+                                            <Link size="sm" onPress={() => setSelected("login")}>
+                                                Login
+                                            </Link>
+                                        </p>
+                                        <div className="flex gap-2 justify-end">
+                                            <Button fullWidth color="primary">
+                                                Sign up
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </Tab>
+                            </Tabs>
+                        </CardBody>
+                    </Card>
                 </div>
             </div>
         </div>
