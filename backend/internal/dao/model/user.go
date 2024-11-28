@@ -5,6 +5,5 @@ type User struct {
 	Name      string         `json:"name" gorm:"column:name;type:varchar(255);not null"`
 	Password  string         `json:"password" gorm:"column:password;type:varchar(255);not null"`
 	Email     string         `json:"email" gorm:"column:email;type:varchar(255);unique;not null"`
-	Wishlist  []Product      `json:"wishlist" gorm:"manytomany:wishlists;"`
 	Platforms []UserPlatform `json:"platform" gorm:"foreignKey:UserID"`
 }

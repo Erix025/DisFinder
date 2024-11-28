@@ -2,11 +2,11 @@ package dao
 
 import (
 	"context"
+	"disfinder-backend/internal/dao/model"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"disfinder-backend/internal/dao/model"
 )
 
 type DBMS struct {
@@ -42,7 +42,7 @@ func InitDB() {
 
 	// Uncomment this if you want to use auto migrate
 	//
-	if err := db.AutoMigrate(&model.User{}, &model.Link{}); err != nil {
+	if err := db.AutoMigrate(&model.UserPlatform{}, &model.Wishlist{}, &model.Product{}, &model.User{}, &model.Platform{}, &model.PriceHistory{}); err != nil {
 		logrus.Fatal(err)
 	}
 
