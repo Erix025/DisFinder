@@ -1,7 +1,7 @@
 package dto
 
 type PlatformAccountCreateReq struct {
-	PlatformId int32 `json:"platform_id"`
+	PlatformId uint `json:"platform_id"`
 
 	Account string `json:"account"`
 
@@ -9,11 +9,11 @@ type PlatformAccountCreateReq struct {
 }
 
 type PlatformAccountDeleteReq struct {
-	PlatformId int32 `json:"platform_id"`
+	PlatformId uint `json:"platform_id"`
 }
 
 type PlatformAccountGetListItem struct {
-	PlatformId int32 `json:"platform_id"`
+	PlatformId uint `json:"platform_id"`
 
 	Account string `json:"account"`
 }

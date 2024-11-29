@@ -1,10 +1,10 @@
 package route
 
 import (
+	"disfinder-backend/api/dto"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"disfinder-backend/api/dto"
 )
 
 func Ping(c *gin.Context) {
@@ -25,4 +25,7 @@ func SetupRouter(e *gin.Engine) {
 	e.Use(cors.New(config))
 	r := e.Group("/api")
 	r.GET("/ping", Ping)
+	setupUserController(r)
+	setupProductController(r)
+	setupWishlistController(r)
 }

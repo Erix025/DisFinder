@@ -1,40 +1,48 @@
 package dto
 
 type ProductInfo struct {
-	Id      int32  `json:"id"`
+	ID      uint   `json:"id"`
 	Name    string `json:"name"`
 	Picture string `json:"picture"`
 	URL     string `json:"url"`
 }
 
 type ProductGetHistoryReq struct {
-	ProductId int32 `json:"product_id"`
+	ProductId uint `json:"product_id"`
 
-	PlatformId int32 `json:"platform_id"`
+	PlatformId uint `json:"platform_id"`
 
 	StartDate string `json:"start_date"`
 
 	EndDate string `json:"end_date"`
 }
 
+type ProductSearchReq struct {
+	Keyword string `json:"keyword"`
+
+	PageNum uint `json:"page_num"`
+
+	PageSize uint `json:"page_size"`
+}
+
 type ProductGetInfoResp struct {
-	Id      int32  `json:"id"`
+	ID      uint   `json:"id"`
 	Name    string `json:"name"`
 	Picture string `json:"picture"`
 	URL     string `json:"url"`
 }
 
-type ProductGetListResp struct {
+type ProductSearchResp struct {
 	Products []ProductInfo `json:"products"`
 }
 
 type ProductHistoryItem struct {
-	ProductID  int32   `json:"product_id"`
-	PlatformID int32   `json:"platform_id"`
+	ProductID  uint    `json:"product_id"`
+	PlatformID uint    `json:"platform_id"`
 	Date       string  `json:"date"`
 	Price      float64 `json:"price"`
 }
 
-type ProductGetPriceHistoryResp struct {
+type ProductGetHistoryResp struct {
 	History []ProductHistoryItem `json:"history"`
 }

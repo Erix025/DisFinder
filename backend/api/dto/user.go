@@ -15,7 +15,7 @@ type UserRegisterReq struct {
 }
 
 type UserUpdateInfoReq struct {
-	Id int32 `json:"id"`
+	ID uint `json:"id"`
 
 	Name string `json:"name"`
 
@@ -23,7 +23,7 @@ type UserUpdateInfoReq struct {
 }
 
 type UserUpdatePasswordReq struct {
-	Uid int32 `json:"uid"`
+	ID uint `json:"id"`
 
 	OldPassword string `json:"old_password"`
 
@@ -31,7 +31,7 @@ type UserUpdatePasswordReq struct {
 }
 
 type UserGetInfoResp struct {
-	Id int32 `json:"id"`
+	ID uint `json:"id"`
 
 	Name string `json:"name"`
 

@@ -1,6 +1,6 @@
 package model
 
 type Wishlist struct {
-	UserID    int `json:"user_id"`
-	ProductID int `json:"product_id"`
+	UserID    uint `json:"user_id"`
+	ProductID uint `json:"product_id"`
 }

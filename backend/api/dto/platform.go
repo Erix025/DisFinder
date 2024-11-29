@@ -1,7 +1,7 @@
 package dto
 
 type Platform struct {
-	Id   int32  `json:"id"`
+	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -10,6 +10,6 @@ type PlatformGetListResp struct {
 }
 
 type PlatformGetNameResp struct {
-	Id   int32  `json:"id"`
+	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }
