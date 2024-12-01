@@ -6,7 +6,7 @@ import (
 )
 
 type IProductController interface {
-	GetInfo(*gin.Context) (*dto.ProductGetInfoResp, error)
+	GetInfo(*gin.Context, *dto.ProductGetInfoReq) (*dto.ProductGetInfoResp, error)
 	Search(*gin.Context, *dto.ProductSearchReq) (*dto.ProductSearchResp, error)
 	GetHistory(*gin.Context, *dto.ProductGetHistoryReq) (*dto.ProductGetHistoryResp, error)
 }
@@ -20,7 +20,7 @@ func NewProductController() *ProductController {
 	return &ProductController{}
 }
 
-func (p *ProductController) GetInfo(c *gin.Context) (*dto.ProductGetInfoResp, error) {
+func (p *ProductController) GetInfo(c *gin.Context, req *dto.ProductGetInfoReq) (*dto.ProductGetInfoResp, error) {
 	var resp dto.ProductGetInfoResp
 	return &resp, nil
 }

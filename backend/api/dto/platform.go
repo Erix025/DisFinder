@@ -5,6 +5,10 @@ type Platform struct {
 	Name string `json:"name"`
 }
 
+type PlatformGetNameReq struct {
+	ID uint `form:"id"`
+}
+
 type PlatformGetListResp struct {
 	Platforms []Platform `json:"platforms"`
 }

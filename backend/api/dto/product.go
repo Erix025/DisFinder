@@ -7,6 +7,10 @@ type ProductInfo struct {
 	URL     string `json:"url"`
 }
 
+type ProductGetInfoReq struct {
+	ID uint `form:"id"`
+}
+
 type ProductGetHistoryReq struct {
 	ProductId uint `json:"product_id"`
 

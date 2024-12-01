@@ -28,4 +28,5 @@ func SetupRouter(e *gin.Engine) {
 	setupUserController(r)
 	setupProductController(r)
 	setupWishlistController(r)
+	setupPlatformRoutes(r)
 }

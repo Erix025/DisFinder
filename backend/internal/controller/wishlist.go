@@ -6,7 +6,7 @@ import (
 )
 
 type IWishlistController interface {
-	GetWishlist(c *gin.Context) (*dto.WishlistGetResp, error)
+	GetWishlist(c *gin.Context, req *dto.WishlistGetReq) (*dto.WishlistGetResp, error)
 	AddProduct(c *gin.Context, req *dto.WishlistAddProductReq) error
 	DeleteProduct(c *gin.Context, req *dto.WishlistDeleteProductReq) error
 	ClearWishlist(c *gin.Context) error
@@ -21,7 +21,7 @@ func NewWishlistController() *WishlistController {
 	return &WishlistController{}
 }
 
-func (p *WishlistController) GetWishlist(c *gin.Context) (*dto.WishlistGetResp, error) {
+func (p *WishlistController) GetWishlist(c *gin.Context, req *dto.WishlistGetReq) (*dto.WishlistGetResp, error) {
 	var resp dto.WishlistGetResp
 	return &resp, nil
 }

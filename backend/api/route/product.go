@@ -22,7 +22,12 @@ type ProductCtlWrapper struct {
 }
 
 func (w *ProductCtlWrapper) GetInfo(c *gin.Context) {
-	resp, err := w.ctl.GetInfo(c)
+	var req dto.ProductGetInfoReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		dto.ResponseFail(c, err)
+		return
+	}
+	resp, err := w.ctl.GetInfo(c, &req)
 	if err != nil {
 		dto.ResponseFail(c, err)
 		return

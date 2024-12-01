@@ -20,7 +20,12 @@ type WishlistCtlWrapper struct {
 }
 
 func (w *WishlistCtlWrapper) GetWishlist(c *gin.Context) {
-	resp, err := w.ctl.GetWishlist(c)
+	var req dto.WishlistGetReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		dto.ResponseFail(c, err)
+		return
+	}
+	resp, err := w.ctl.GetWishlist(c, &req)
 	if err != nil {
 		dto.ResponseFail(c, err)
 		return

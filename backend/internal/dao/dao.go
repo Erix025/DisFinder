@@ -28,6 +28,19 @@ type DBCfg struct {
 	DSN string
 }
 
+func InitPlatform() {
+	// TODO: Add platform data
+	platforms := []model.Platform{
+		{1, "Amazon"}, {2, "EBay"},
+	}
+
+	for _, platform := range platforms {
+		if err := db.FirstOrCreate(&platform, model.Platform{ID: platform.ID}).Error; err != nil {
+			logrus.Fatal(err)
+		}
+	}
+}
+
 func InitDB() {
 	var cfg DBCfg
 	err := viper.Sub("Database").UnmarshalExact(&cfg)
@@ -42,9 +55,11 @@ func InitDB() {
 
 	// Uncomment this if you want to use auto migrate
 	//
-	if err := db.AutoMigrate(&model.UserPlatform{}, &model.Wishlist{}, &model.Product{}, &model.User{}, &model.Platform{}, &model.PriceHistory{}); err != nil {
+	if err := db.AutoMigrate(&model.Wishlist{}, &model.Product{}, &model.User{}, &model.Platform{}, &model.PriceHistory{}); err != nil {
 		logrus.Fatal(err)
 	}
+
+	InitPlatform()
 
 	if viper.GetString("App.RunLevel") == "debug" {
 		db = db.Debug()
