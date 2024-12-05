@@ -1,10 +1,13 @@
 package dto
 
+import "gopkg.in/guregu/null.v4"
+
 type ProductInfo struct {
-	ID      uint   `json:"id"`
-	Name    string `json:"name"`
-	Picture string `json:"picture"`
-	URL     string `json:"url"`
+	ID      uint    `json:"id"`
+	Name    string  `json:"name"`
+	Picture string  `json:"picture"`
+	URL     string  `json:"url"`
+	Price   float64 `json:"price"`
 }
 
 type ProductGetInfoReq struct {
@@ -16,17 +19,21 @@ type ProductGetHistoryReq struct {
 
 	PlatformId uint `json:"platform_id"`
 
-	StartDate string `json:"start_date"`
+	StartDate null.Time `json:"start_date"`
 
-	EndDate string `json:"end_date"`
+	EndDate null.Time `json:"end_date"`
 }
 
 type ProductSearchReq struct {
-	Keyword string `json:"keyword"`
+	Keyword string `form:"keyword"`
+}
 
-	PageNum uint `json:"page_num"`
+type ProductGetListReq struct {
+	Keyword string `form:"keyword"`
 
-	PageSize uint `json:"page_size"`
+	PageNum uint `form:"page_num"`
+
+	PageSize uint `form:"page_size"`
 }
 
 type ProductGetInfoResp struct {
@@ -36,15 +43,16 @@ type ProductGetInfoResp struct {
 	URL     string `json:"url"`
 }
 
-type ProductSearchResp struct {
+type ProductGetListResp struct {
 	Products []ProductInfo `json:"products"`
+	Total    int64         `json:"total"`
 }
 
 type ProductHistoryItem struct {
-	ProductID  uint    `json:"product_id"`
-	PlatformID uint    `json:"platform_id"`
-	Date       string  `json:"date"`
-	Price      float64 `json:"price"`
+	ProductID  uint      `json:"product_id"`
+	PlatformID uint      `json:"platform_id"`
+	Date       null.Time `json:"date"`
+	Price      float64   `json:"price"`
 }
 
 type ProductGetHistoryResp struct {

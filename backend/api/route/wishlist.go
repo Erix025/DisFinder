@@ -21,7 +21,7 @@ type WishlistCtlWrapper struct {
 
 func (w *WishlistCtlWrapper) GetWishlist(c *gin.Context) {
 	var req dto.WishlistGetReq
-	if err := c.ShouldBindQuery(&req); err != nil {
+	if err := dto.BindReq(c, &req); err != nil {
 		dto.ResponseFail(c, err)
 		return
 	}
@@ -35,7 +35,7 @@ func (w *WishlistCtlWrapper) GetWishlist(c *gin.Context) {
 
 func (w *WishlistCtlWrapper) AddProduct(c *gin.Context) {
 	var req dto.WishlistAddProductReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := dto.BindReq(c, &req); err != nil {
 		dto.ResponseFail(c, err)
 		return
 	}
@@ -49,7 +49,7 @@ func (w *WishlistCtlWrapper) AddProduct(c *gin.Context) {
 
 func (w *WishlistCtlWrapper) DeleteProduct(c *gin.Context) {
 	var req dto.WishlistDeleteProductReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := dto.BindReq(c, &req); err != nil {
 		dto.ResponseFail(c, err)
 		return
 	}

@@ -137,8 +137,12 @@ func (c *UserController) UpdateInfo(ctx *gin.Context, req *dto.UserUpdateInfoReq
 func (c *UserController) UpdatePwd(ctx *gin.Context, req *dto.UserUpdatePasswordReq) error {
 	var user model.User
 	userID := ctx.GetUint("userID")
-	err := dao.DB(ctx).First(&user, userID).Error
 
+	if req.ID != userID {
+		return stacktrace.NewErrorWithCode(dto.ErrPrivilege, "You don't have the privilege to update this user.")
+	}
+
+	err := dao.DB(ctx).First(&user, userID).Error
 	if err != nil {
 		return stacktrace.PropagateWithCode(err, dto.ErrUserNotFound, "User not found.")
 	}

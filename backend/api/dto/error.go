@@ -15,6 +15,8 @@ const (
 	ErrProductNotFound  // 产品不存在
 	ErrProductExist     // 产品已存在
 
+	ErrSearchOutOfRange // 搜索范围超出限制
+
 	ErrInvalidRequest // 参数错误
 
 	BadRequest    stacktrace.ErrorCode = 400
