@@ -14,7 +14,7 @@ class AmazonParser(ParserBase):
         return soup.find_all('div', {'data-component-type': 's-search-result'})
     
     def parse_result(self, result) -> dict:
-        title_element = result.find('h2', {'class': "a-size-mini a-spacing-none a-color-base s-line-clamp-2"})
+        title_element = result.find('div', {'data-cy': "title-recipe"})
         if title_element:
             title_element = title_element.find('a')
         else:
@@ -24,7 +24,7 @@ class AmazonParser(ParserBase):
         price_element_fraction = result.find('span', {'class': 'a-price-fraction'})
         
         purl = self.base_url + title_element['href']
-        title = title_element.text.strip()
+        title = title_element.find('span').text.strip()
         img_url = img_element['src']
         if price_element_whole and price_element_fraction:
             price = price_element_whole.text + price_element_fraction.text
@@ -33,12 +33,18 @@ class AmazonParser(ParserBase):
         else:
             price = 'N/A'
         
+        # skip useless result
+        if title == "Sponsored":
+            return
+        if price == 'N/A':
+            return
+        
         return {
             "title": title,
             "price": price,
             "url": purl,
             "img": img_url,
-            "platform": "Amazon"
+            "platform": 0
         }
         
     def parse_results(self, html):
@@ -49,7 +55,11 @@ class AmazonParser(ParserBase):
         print(keyword)
         print(url)
         html = utils.fetch_page(self.driver, url)
+        # save html
+        with open("amazon.html", "w") as f:
+            f.write(str(html))
         result_list = self.get_result_list(html)
+        # print(result_list)
         res_list = [self.parse_result(result) for result in result_list]
         res_list = [res for res in res_list if res]
         return res_list

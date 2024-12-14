@@ -38,7 +38,7 @@ def fetch_page(driver, url: str):
     print(response.status, response.reason)
 
     # 读取响应内容
-    html = response.read()
+    html = response.read().decode('utf-8')
     # print(html.decode('utf-8'))
 
     # 关闭连接

@@ -31,12 +31,22 @@ class EBayParser(ParserBase):
         else:
             price = 'N/A'
         
+        # if price is a range, skip
+        if '~' in price:
+            return
+        if '至' in price:
+            return
+        
+        # cut of the currency symbol
+        price = price.replace('$', '')
+        price = price.replace('元', '')
+        
         return {
             "title": title,
             "price": price,
             "url": purl,
             "img": img_url,
-            "platform": "EBay"
+            "platform": 1
         }
         
     def parse_results(self, html):
