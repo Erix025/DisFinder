@@ -22,4 +22,5 @@ type WishlistGetItem struct {
 
 type WishlistGetResp struct {
 	Products []WishlistGetItem `json:"products"`
+	Total    int64             `json:"total"`
 }

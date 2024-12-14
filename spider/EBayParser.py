@@ -30,11 +30,18 @@ class EBayParser(ParserBase):
             price = price_element.text
         else:
             price = 'N/A'
+                    
+        try:
+            price = float(price)
+        except ValueError:
+            price = 'N/A'
         
         # if price is a range, skip
         if '~' in price:
             return
         if '至' in price:
+            return
+        if price == 'N/A':
             return
         
         # cut of the currency symbol
@@ -45,8 +52,8 @@ class EBayParser(ParserBase):
             "title": title,
             "price": price,
             "url": purl,
-            "img": img_url,
-            "platform": 1
+            "image": img_url,
+            "platform": 2
         }
         
     def parse_results(self, html):

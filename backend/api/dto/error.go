@@ -17,6 +17,10 @@ const (
 
 	ErrSearchOutOfRange // 搜索范围超出限制
 
+	ErrInvalidPage // 页码错误
+
+	ErrEmptyWishlist // 心愿单为空
+
 	ErrInvalidRequest // 参数错误
 
 	BadRequest    stacktrace.ErrorCode = 400

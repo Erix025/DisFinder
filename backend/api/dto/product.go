@@ -17,8 +17,6 @@ type ProductGetInfoReq struct {
 type ProductGetHistoryReq struct {
 	ProductId uint `json:"product_id"`
 
-	PlatformId uint `json:"platform_id"`
-
 	StartDate null.Time `json:"start_date"`
 
 	EndDate null.Time `json:"end_date"`

@@ -9,10 +9,10 @@ import (
 
 func setupWishlistController(r *gin.RouterGroup) {
 	cw := WishlistCtlWrapper{ctl: controller.NewWishlistController()}
-	r.GET("/wishlist", cw.GetWishlist)
-	r.POST("/wishlist/add", cw.AddProduct)
-	r.POST("/wishlist/delete", cw.DeleteProduct)
-	r.POST("/wishlist/clear", cw.ClearWishlist)
+	r.GET("/wishlist", controller.AuthMidWare(), cw.GetWishlist)
+	r.POST("/wishlist/add", controller.AuthMidWare(), cw.AddProduct)
+	r.POST("/wishlist/delete", controller.AuthMidWare(), cw.DeleteProduct)
+	r.POST("/wishlist/clear", controller.AuthMidWare(), cw.ClearWishlist)
 }
 
 type WishlistCtlWrapper struct {

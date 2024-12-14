@@ -32,6 +32,11 @@ class AmazonParser(ParserBase):
             price = price_element_whole.text
         else:
             price = 'N/A'
+            
+        try:
+            price = float(price)
+        except ValueError:
+            price = 'N/A'
         
         # skip useless result
         if title == "Sponsored":
@@ -43,8 +48,8 @@ class AmazonParser(ParserBase):
             "title": title,
             "price": price,
             "url": purl,
-            "img": img_url,
-            "platform": 0
+            "image": img_url,
+            "platform": 1
         }
         
     def parse_results(self, html):

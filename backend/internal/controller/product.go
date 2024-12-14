@@ -55,6 +55,15 @@ func SearchEngine(keyword string) ([]dto.SearchItem, error) {
 	}
 	defer httpResp.Body.Close()
 	// parse response
+	// print raw response
+	// Read the raw response body
+	//rawBody, err := io.ReadAll(httpResp.Body)
+	//if err != nil {
+	//	return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Failed to read response body")
+	//}
+
+	//// Print raw response
+	//logrus.Debug(string(rawBody))
 	err = json.NewDecoder(httpResp.Body).Decode(&rawResp)
 	if err != nil {
 		return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Search engine error")
@@ -112,28 +121,27 @@ func (p *ProductController) GetList(c *gin.Context, req *dto.ProductGetListReq) 
 		return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Database error")
 	}
 	if resp.Total < int64(req.PageNum*req.PageSize) {
-		return nil, stacktrace.NewErrorWithCode(dto.ErrSearchOutOfRange, "Search out of range")
+		return nil, stacktrace.NewErrorWithCode(dto.ErrInvalidPage, "Invalid page number")
 	}
 	err = tx.Offset(int(req.PageNum * req.PageSize)).Limit(int(req.PageSize)).Find(&products).Error
 	if err != nil {
 		return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Database error")
 	}
-	for _, item := range products {
-		resp.Products = append(resp.Products, dto.ProductInfo{
-			ID:      item.ID,
-			Name:    item.Name,
-			Picture: item.Picture,
-			URL:     item.URL,
-		})
-	}
+
 	// get current price
-	for _, item := range resp.Products {
+	for _, item := range products {
 		var history model.PriceHistory
 		err := dao.DB(c).Model(&model.PriceHistory{}).Where("product_id = ?", item.ID).Order("date desc").First(&history).Error
 		if err != nil {
 			return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Database error")
 		}
-		item.Price = history.Price
+		resp.Products = append(resp.Products, dto.ProductInfo{
+			ID:      item.ID,
+			Name:    item.Name,
+			Picture: item.Picture,
+			URL:     item.URL,
+			Price:   history.Price,
+		})
 	}
 	return &resp, nil
 }
@@ -141,12 +149,17 @@ func (p *ProductController) GetList(c *gin.Context, req *dto.ProductGetListReq) 
 func (p *ProductController) GetHistory(c *gin.Context, req *dto.ProductGetHistoryReq) (*dto.ProductGetHistoryResp, error) {
 	var resp dto.ProductGetHistoryResp
 	var history []model.PriceHistory
-	err := dao.DB(c).Where("id = ? AND date >= ? AND date <= ?", req.ProductId, req.StartDate, req.EndDate).Find(&history).Error
+	// query validation
+	if req.StartDate.Time.After(req.EndDate.Time) {
+		return nil, stacktrace.NewErrorWithCode(dto.ErrInvalidRequest, "Invalid date range")
+	}
+
+	err := dao.DB(c).Where("product_id = ? AND date >= ? AND date <= ?", req.ProductId, req.StartDate, req.EndDate).Find(&history).Error
 	if err != nil {
 		return nil, stacktrace.PropagateWithCode(err, dto.ErrProductNotFound, "Product not found")
 	}
 	for _, h := range history {
-		_ = append(resp.History, dto.ProductHistoryItem{
+		resp.History = append(resp.History, dto.ProductHistoryItem{
 			ProductID:  h.ProductID,
 			PlatformID: h.PlatformID,
 			Date:       h.Date,
