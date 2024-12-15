@@ -1,5 +1,6 @@
 from ParserBase import ParserBase
 import utils
+import re
 
 
 class EBayParser(ParserBase):
@@ -30,23 +31,25 @@ class EBayParser(ParserBase):
             price = price_element.text
         else:
             price = 'N/A'
-                    
-        try:
-            price = float(price)
-        except ValueError:
-            price = 'N/A'
         
         # if price is a range, skip
         if '~' in price:
             return
         if '至' in price:
             return
-        if price == 'N/A':
-            return
         
         # cut of the currency symbol
         price = price.replace('$', '')
         price = price.replace('元', '')
+        price = price.replace(',', '')
+        
+        try:
+            price = float(price)
+        except ValueError:
+            price = 'N/A'
+            
+        if price == 'N/A':
+            return
         
         return {
             "title": title,
@@ -62,7 +65,35 @@ class EBayParser(ParserBase):
     def search(self, keyword) -> list:
         url = self.search_url + keyword
         html = utils.fetch_page(self.driver, url)
+        # save html
+        with open("ebay.html", "w") as f:
+            f.write(str(html))
         result_list = self.get_result_list(html)
         res_list = [self.parse_result(result) for result in result_list]
         res_list = [res for res in res_list if res]
         return res_list
+    
+    def extract_price(self, price_str):
+        match = re.search(r'\d+(\.\d+)?', price_str)
+        if match:
+            return float(match.group())
+        else:
+            return 'N/A'
+    
+    def poll(self, url) -> dict:
+        price = 0
+        html = utils.fetch_page(self.driver, url)
+        soup = utils.get_soup(html)
+        price_element = soup.find('div', {'class': 'x-price-primary'})
+        if price_element:
+            price_element = price_element.find('span')
+            
+        if price_element:
+            price = price_element.text
+            price = self.extract_price(price)
+        else:
+            price = 'N/A'
+            
+        if price == 'N/A':
+            return -1
+        return price

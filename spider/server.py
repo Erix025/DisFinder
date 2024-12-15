@@ -19,6 +19,21 @@ class SearchResponse:
             'data': self.data
         }
 
+class PollResponse:
+    def __init__(self, code, msg, price):
+        self.code = code
+        self.msg = msg
+        self.data = {
+            'price': price
+        } if price else None
+        
+    def to_dict(self):
+        return {
+            'code': self.code,
+            'msg': self.msg,
+            'data': self.data
+        }
+
 def search_handler(driver, keyword: str) -> SearchResponse:
     results = []
     keyword = keyword.replace(' ', '+')
@@ -41,6 +56,31 @@ def spider_search():
 
     # 返回搜索结果
     return jsonify(search_handler(driver, keyword).to_dict())
+
+def poll_handler(driver, url):
+    if 'amazon' in url:
+        parser = AmazonParser(driver)
+        price = parser.poll(url)
+        if price < 0:
+            return PollResponse(400, 'Failed', -1)
+        return PollResponse(200, 'Success', price)
+    elif 'ebay' in url:
+        parser = EBayParser(driver)
+        price = parser.poll(url)
+        if price < 0:
+            return PollResponse(400, 'Failed', None)
+        return PollResponse(200, 'Success', price)
+    else:
+        return PollResponse(400, 'Bad request', None)
+
+@app.route('/spider/poll', methods=['POST'])
+def spider_poll():
+    url = request.json.get('url')
+    if not url:
+        return jsonify(SearchResponse(400, 'Bad request', []).to_dict())
+    
+    return jsonify(poll_handler(driver, url).to_dict())
+
 
 if __name__ == '__main__':
     

@@ -12,7 +12,7 @@ class AmazonParser(ParserBase):
     def get_result_list(self, html: str) -> list:
         soup = utils.get_soup(html)
         return soup.find_all('div', {'data-component-type': 's-search-result'})
-    
+        
     def parse_result(self, result) -> dict:
         title_element = result.find('div', {'data-cy': "title-recipe"})
         if title_element:
@@ -68,3 +68,25 @@ class AmazonParser(ParserBase):
         res_list = [self.parse_result(result) for result in result_list]
         res_list = [res for res in res_list if res]
         return res_list
+    
+    def poll(self, url) -> dict:
+        price = 0
+        html = utils.fetch_page(self.driver, url)
+        soup = utils.get_soup(html)
+        price_element_whole = soup.find('span', {'class': 'a-price-whole'})
+        price_element_fraction = soup.find('span', {'class': 'a-price-fraction'})
+        if price_element_whole and price_element_fraction:
+            price = price_element_whole.text + price_element_fraction.text
+        elif price_element_whole:
+            price = price_element_whole.text
+        else:
+            price = 'N/A'
+            
+        try :
+            price = float(price)
+        except ValueError:
+            price = 'N/A'  
+            
+        if price == 'N/A':
+            return -1
+        return price
