@@ -23,9 +23,7 @@ class PollResponse:
     def __init__(self, code, msg, price):
         self.code = code
         self.msg = msg
-        self.data = {
-            'price': price
-        } if price else None
+        self.data = price if price else None
         
     def to_dict(self):
         return {

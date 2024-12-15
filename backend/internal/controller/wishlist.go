@@ -86,7 +86,7 @@ func (p *WishlistController) AddProduct(c *gin.Context, req *dto.WishlistAddProd
 	}
 	// check if the product is already in the wishlist
 	err = dao.DB(c).Where(&wishlist).First(&wishlist).Error
-	if err != nil {
+	if err == nil {
 		return stacktrace.PropagateWithCode(err, dto.ErrProductExist, "Product is already in the wishlist")
 	}
 	// add product to wishlist

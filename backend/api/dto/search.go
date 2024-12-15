@@ -13,3 +13,13 @@ type SearchResp struct {
 	Msg  string       `json:"msg"`
 	Data []SearchItem `json:"data"`
 }
+
+type PollingReq struct {
+	URL string `json:"url"`
+}
+
+type PollingResp struct {
+	Code int     `json:"code"`
+	Msg  string  `json:"msg"`
+	Data float64 `json:"data"`
+}

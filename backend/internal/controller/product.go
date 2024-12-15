@@ -85,7 +85,7 @@ func (p *ProductController) Search(c *gin.Context, req *dto.ProductSearchReq) er
 			Picture: item.Image,
 			URL:     item.URL,
 		}
-		err := dao.DB(c).Create(newProduct).Error
+		err := dao.DB(c).Create(&newProduct).Error
 		if err != nil {
 			newProduct.URL = ""
 			newProduct.Picture = ""

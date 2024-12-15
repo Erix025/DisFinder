@@ -14,3 +14,12 @@ Database_test:
 
 Auth:
   Secret: "sDxKfryE9s3FZWq7kjJl"
+
+Service:
+  PollingInterval: 1 #hour
+
+Email:
+  Host: smtp.gmail.com
+  Port: 587
+  User: example.gmail.com
+  Password: password

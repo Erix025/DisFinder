@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"disfinder-backend/api"
+	"disfinder-backend/internal/service"
+
 	// "disfinder-backend/internal/controller"
 	"disfinder-backend/internal/dao"
 
@@ -28,6 +30,8 @@ var rootCmd = &cobra.Command{
 		dao.InitDB()
 		// init secret
 		// controller.InitSecret()
+		// init service
+		service.InitService()
 		// start server
 		return api.StartServer()
 	},
