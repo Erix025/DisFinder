@@ -7,11 +7,12 @@ import (
 	"disfinder-backend/internal/dao/model"
 	"disfinder-backend/utils/stacktrace"
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/guregu/null.v4"
-	"net/http"
-	"time"
 )
 
 type DiscountNoticeItem struct {
@@ -150,5 +151,5 @@ func InitService() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	InitPolling(time.Duration(cfg.PollingInterval) * time.Second)
+	InitPolling(time.Duration(cfg.PollingInterval) * time.Hour)
 }

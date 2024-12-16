@@ -34,7 +34,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/components/AcmeLogo.jsx",
-    "src/components/SearchIcon.jsx"
+    "src/components/SearchIcon.jsx",
+    "src/models/error.tsx"
   ],
   "exclude": [
     "node_modules"

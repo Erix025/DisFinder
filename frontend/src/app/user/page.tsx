@@ -2,15 +2,42 @@
 'use client';
 
 import Navbar from '../../components/Navbar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Button, Card, CardBody } from '@nextui-org/react';
+import { ErrorCode } from "../../models/error"
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export default function UserProfile() {
-    const user = {
-        name: '张三',
-        email: 'zhangsan@example.com',
-    };
+    const [user, setUser] = useState<User | null>(null);
+    useEffect(() => {
+        const fetchUser = async () => {
+            const response = await fetch(`${apiUrl}/api/user/info`, {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            const resp: Response = await response.json();
+            console.log(resp)
+            if (resp.code == ErrorCode.NoErr) {
+                const user_resp: UserGetInfoResp = resp.data;
+                const user: User = {
+                    id: user_resp.id,
+                    name: user_resp.name,
+                    email: user_resp.email,
+                }
+                setUser(user);
+            } else if (resp.code == ErrorCode.ErrNotLogin) {
+                alert('Please login first');
+                router.push('/auth');
+            } else {
+                console.error(resp.msg);
+            }
+
+        };
+        fetchUser();
+    }, []);
 
     const router = useRouter();
     const [isEditingPassword, setIsEditingPassword] = useState(false);
@@ -44,11 +71,11 @@ export default function UserProfile() {
                     <ul className="space-y-4">
                         <li className="flex justify-between items-center">
                             <span className="font-semibold">Username</span>
-                            <span>{user.name}</span>
+                            <span>{user?.name}</span>
                         </li>
                         <li className="flex justify-between items-center">
                             <span className="font-semibold">Email</span>
-                            <span>{user.email}</span>
+                            <span>{user?.email}</span>
                         </li>
                         <li className="flex justify-between items-center">
                             <span className="font-semibold">Password</span>
