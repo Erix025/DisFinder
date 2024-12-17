@@ -9,3 +9,8 @@ interface UserGetInfoResp {
     name: string;
     email: string;
 }
+
+interface ProductGetListResp {
+    products: ProductInfo[];
+    total: number;
+}

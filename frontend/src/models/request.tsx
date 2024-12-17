@@ -20,3 +20,9 @@ interface UserUpdatePasswordReq {
     old_password: string;
     new_password: string;
 }
+
+interface ProductGetListReq {
+    keyword: string;
+    page_num: number;
+    page_size: number;
+}
