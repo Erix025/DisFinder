@@ -1,18 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Chart, { Props } from 'react-apexcharts';
+import { json } from 'stream/consumers';
 
 const state: Props['series'] = [
     {
         name: 'Series1',
-        data: [31, 40, 28, 51, 42, 109, 100],
+        data: [31, 40, 28, 51, 42],
     },
     {
         name: 'Series2',
-        data: [11, 32, 45, 32, 34, 52, 41],
+        data: [11, 32, 45, 32, 34],
     },
 ];
 
-const default_options: Props['options'] = {
+export const default_options: Props['options'] = {
     chart: {
         type: 'area',
         animations: {
@@ -81,13 +82,23 @@ export interface SteamProps {
     series: Props['series'];
 }
 
+
+
 export const Steam = (props: SteamProps) => {
     const { options = default_options, series } = props;
+
+
+
+    useEffect(() => {
+        console.log("[chart]series", series);
+        console.log("[chart]options", options);
+    }, [options, series]);
 
     return (
         <>
             <div id="chart">
                 <Chart
+                    key={JSON.stringify(series) + JSON.stringify(options)}
                     options={options}
                     series={series}
                     type="area"

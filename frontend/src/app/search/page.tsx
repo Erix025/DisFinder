@@ -27,7 +27,7 @@ export default function SearchResultsPage() {
     };
 
     const handleCardClick = (id: number) => {
-        router.push(`/product?${id}`);
+        router.push(`/product/${id}`);
     };
 
     useEffect(() => {

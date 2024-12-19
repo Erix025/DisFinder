@@ -26,3 +26,9 @@ interface ProductGetListReq {
     page_num: number;
     page_size: number;
 }
+
+interface ProductGetHistoryReq {
+    product_id: number;
+    start_date: string;
+    end_date: string;
+}

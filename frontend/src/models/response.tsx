@@ -14,3 +14,19 @@ interface ProductGetListResp {
     products: ProductInfo[];
     total: number;
 }
+
+interface ProductGetInfoResp {
+    id: number;
+    name: string;
+    picture: string;
+    url: string;
+}
+
+interface PlatformGetNameResp {
+    id: number;
+    name: string;
+}
+
+interface ProductGetHistoryResp {
+    history: PriceHistory[];
+}

@@ -10,4 +10,12 @@ interface ProductInfo {
     picture: string;
     url: string;
     price: number;
+    platform_id: number;
+}
+
+interface PriceHistory {
+    id: number;
+    price: number;
+    date: string;
+    platform: number;
 }
