@@ -3,11 +3,12 @@ package dto
 import "gopkg.in/guregu/null.v4"
 
 type ProductInfo struct {
-	ID      uint    `json:"id"`
-	Name    string  `json:"name"`
-	Picture string  `json:"picture"`
-	URL     string  `json:"url"`
-	Price   float64 `json:"price"`
+	ID         uint    `json:"id"`
+	Name       string  `json:"name"`
+	Picture    string  `json:"picture"`
+	URL        string  `json:"url"`
+	Price      float64 `json:"price"`
+	PlatformID uint    `json: "platform_id`
 }
 
 type ProductGetInfoReq struct {
@@ -35,10 +36,11 @@ type ProductGetListReq struct {
 }
 
 type ProductGetInfoResp struct {
-	ID      uint   `json:"id"`
-	Name    string `json:"name"`
-	Picture string `json:"picture"`
-	URL     string `json:"url"`
+	ID         uint   `json:"id"`
+	Name       string `json:"name"`
+	Picture    string `json:"picture"`
+	URL        string `json:"url"`
+	PlatformID uint   `json:"platform_id"`
 }
 
 type ProductGetListResp struct {

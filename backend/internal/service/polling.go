@@ -112,10 +112,9 @@ func Polling() {
 		}
 		// update price history
 		newHistory := model.PriceHistory{
-			ProductID:  wishlist.ProductID,
-			Price:      price,
-			Date:       null.NewTime(time.Now(), true),
-			PlatformID: history.PlatformID,
+			ProductID: wishlist.ProductID,
+			Price:     price,
+			Date:      null.NewTime(time.Now(), true),
 		}
 		err = dao.DB(nil).Save(&newHistory).Error
 		if err != nil {
