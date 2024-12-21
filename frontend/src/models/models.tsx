@@ -4,6 +4,13 @@ interface User {
     email: string;
 }
 
+interface Wishlist {
+    id: number;
+    name: string;
+    picture: string;
+    url: string;
+}
+
 interface ProductInfo {
     id: number;
     name: string;

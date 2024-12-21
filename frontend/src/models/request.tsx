@@ -32,3 +32,11 @@ interface ProductGetHistoryReq {
     start_date: string;
     end_date: string;
 }
+
+interface WishlistAddProductReq {
+    id: number;
+}
+
+interface WishlistDeleteProductReq {
+    id: number;
+}
