@@ -47,7 +47,7 @@ func AuthMidWare() gin.HandlerFunc {
 		//get token
 		tokenString, err := c.Cookie("token")
 		if err != nil {
-			dto.ResponseFail(c, stacktrace.NewErrorWithCode(dto.ErrPrivilege, "User not login."))
+			dto.ResponseFail(c, stacktrace.NewErrorWithCode(dto.ErrNotLogin, "User not login."))
 			c.Abort()
 			return
 		}

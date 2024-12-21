@@ -113,6 +113,9 @@ func (c *UserController) UpdateInfo(ctx *gin.Context, req *dto.UserUpdateInfoReq
 	}
 	// check auth
 	userID := ctx.GetUint("userID")
+	if user.ID == 0 {
+		return stacktrace.NewErrorWithCode(dto.ErrNotLogin, "User not login.")
+	}
 	if user.ID != userID {
 		return stacktrace.NewErrorWithCode(dto.ErrPrivilege, "You don't have the privilege to update this user.")
 	}
@@ -137,6 +140,10 @@ func (c *UserController) UpdateInfo(ctx *gin.Context, req *dto.UserUpdateInfoReq
 func (c *UserController) UpdatePwd(ctx *gin.Context, req *dto.UserUpdatePasswordReq) error {
 	var user model.User
 	userID := ctx.GetUint("userID")
+
+	if userID == 0 {
+		return stacktrace.NewErrorWithCode(dto.ErrNotLogin, "User not login.")
+	}
 
 	if req.ID != userID {
 		return stacktrace.NewErrorWithCode(dto.ErrPrivilege, "You don't have the privilege to update this user.")
