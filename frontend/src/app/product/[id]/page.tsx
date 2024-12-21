@@ -5,10 +5,13 @@ import { useState, useEffect } from 'react';
 import { Button, Card, CardBody, CardFooter, Image } from '@nextui-org/react';
 import dynamic from 'next/dynamic';
 import { Props } from 'react-apexcharts';
+import { useTheme } from 'next-themes';
 import { useParams, useRouter } from 'next/navigation';
 import { ErrorCode } from '@/models/error';
 
 import Navbar from '@/components/Navbar';
+
+import { ResponsiveContainer } from 'recharts';
 
 import { Link } from '@nextui-org/react'
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
@@ -23,6 +26,32 @@ export default function ProductComparisonPage() {
     const id = Number(params.id);
     const [platform, setPlatform] = useState<string>('');
     const [data, setData] = useState([]);
+
+    const fetchAddWishlist = async () => {
+        const req: WishlistAddProductReq = {
+            id: id,
+        };
+        const response = await fetch(`${apiUrl}/api/wishlist/add`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(req),
+        });
+
+        const resp: Response = await response.json();
+        console.log(resp)
+        if (resp.code == ErrorCode.NoErr) {
+            alert('Add wishlist success');
+            console.log('Add wishlist success');
+        } else if (resp.code == ErrorCode.ErrNotLogin) {
+            alert('Please login first');
+            router.push('/auth');
+        } else {
+            console.error(resp.msg);
+        }
+    }
 
     const fetchPlatform = async (platform_id: number) => {
         const searchUrl = `${apiUrl}/api/platform/get?id=${platform_id}`;
@@ -112,61 +141,132 @@ export default function ProductComparisonPage() {
         router.refresh();
     }, []);
 
+    const { theme } = useTheme();
+
+    // 选择字体颜色
+    const textColor = theme == "dark" ? '#f5f5f5' : '#333';  // 暗模式使用浅色字体，亮模式使用深色字体
+    const gridColor = theme == "dark" ? '#444' : '#e6e6e6';   // 网格线颜色，根据模式调整
+
     // 构建价格历史图表的数据
 
     return (
         <div className="min-h-screen text-foreground bg-background">
             {/* Navbar */}
             <Navbar />
-            <div className="max-w-4xl mx-auto mt-10 p-4 flex items-start gap-8">
-                <div className="w-2/3">
+
+            {/* 主内容 */}
+            <div className="max-w-5xl mx-auto mt-10 p-4 grid gap-8 grid-cols-1 md:grid-cols-3">
+                {/* 产品详情 */}
+                <div className="md:col-span-2">
                     <Card>
                         <CardBody>
-                            <div className='flex'>
-                                <h2 className="w-2/3 text-xl font-bold mb-4">{product?.name}</h2>
-                                <Image className='' src={product?.picture} alt={product?.name} width="100%" height="auto" />
+                            <div className="flex items-center gap-4">
+                                <div className="w-1/2">
+                                    <Image
+                                        src={product?.picture}
+                                        alt={product?.name}
+                                        width="100%"
+                                        height="auto"
+                                    />
+                                </div>
+                                <div className="w-1/2">
+                                    <h2 className="text-2xl font-bold">{product?.name}</h2>
+                                    <p className="text-md mt-2 text-gray-600">{platform}</p>
+                                </div>
                             </div>
                         </CardBody>
                     </Card>
-
                 </div>
 
-                <div className='w-1/3'>
-                    <Card className="mb-4 mt-4">
+                {/* 操作卡片 */}
+                <div>
+                    <Card>
                         <CardBody>
-                            <div className='flex'>
-                                <h3 className="text-lg font-semibold">{platform}</h3>
-                                <p className="text-xl text-primary font-semibold ml-auto">$ {histories.length > 0 ? histories[0].price : 'Unknown'}</p>
-                            </div>
+                            <h3 className="text-xl font-semibold mb-4">Product Actions</h3>
+                            <p className="text-lg font-semibold text-primary mb-4">
+                                $ {histories.length > 0 ? histories[histories.length - 1].price : 'Unknown'}
+                            </p>
                             <Button
-                                className="mt-4 font-semibold"
+                                className="w-full mb-2"
                                 as={Link}
                                 isExternal
-                                href={product ? product.url : ''}
-                                color='success'>
+                                href={product?.url || ''}
+                                color="success"
+                            >
                                 Buy Now
+                            </Button>
+                            <Button
+                                className="w-full"
+                                onClick={fetchAddWishlist}
+                                color="warning"
+                            >
+                                Add to Wishlist
                             </Button>
                         </CardBody>
                     </Card>
                 </div>
             </div>
-            <div className="max-w-4xl mx-auto mt-2 p-4">
+
+            {/* 图表区域 */}
+            <div className="max-w-5xl mx-auto mt-10 p-4">
                 <Card>
                     <CardBody>
-                        <div>
-                            <h3 className="text-lg font-semibold mb-4">Price History</h3>
+                        <h3 className="text-xl font-semibold mb-4 text-center">Price History</h3>
+                        <ResponsiveContainer width="100%" height={300}>
                             <LineChart width={600} height={300} data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                <Line type="monotone" dataKey="price" stroke="#8884d8" />
-                                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
+                                <CartesianGrid stroke={gridColor} strokeDasharray="5 5" />
+                                <XAxis
+                                    dataKey="name"
+                                    tick={{
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        fill: textColor, // 使用动态字体颜色
+                                    }}
+                                    label={{
+                                        value: 'Date',
+                                        position: 'insideBottom',
+                                        offset: -5,
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        fill: textColor,
+                                    }}
+                                />
+                                <YAxis
+                                    tick={{
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        fill: textColor, // 使用动态字体颜色
+                                    }}
+                                    label={{
+                                        value: 'Price ($)',
+                                        angle: -90,
+                                        position: 'insideLeft',
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        fill: textColor,
+                                    }}
+                                    domain={[
+                                        (dataMin: number) => Math.max(0, dataMin - 10),
+                                        (dataMax: number) => dataMax + 10,
+                                    ]}
+                                    tickFormatter={(value) => value.toFixed(2)}
+                                />
+                                <Tooltip
+                                    formatter={(value: number) => `$${value.toFixed(2)}`}
+                                    contentStyle={{
+                                        fontSize: '14px',
+                                        fontWeight: '500',
+                                        backgroundColor: theme == "dark" ? '#444' : '#fafafa',
+                                        borderRadius: '4px',
+                                        border: '1px solid #e5e5e5',
+                                    }}
+                                />
+                                <Line type="monotone" dataKey="price" stroke="#8884d8" strokeWidth={2} dot={{ r: 5 }} />
                             </LineChart>
-                        </div>
+                        </ResponsiveContainer>
                     </CardBody>
-                </Card >
+                </Card>
             </div>
-
         </div>
     );
 }
