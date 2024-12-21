@@ -33,7 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/components/AcmeLogo.jsx",
+    "src/components/Logo.jsx",
     "src/components/SearchIcon.jsx",
     "src/models/error.tsx"
   ],
