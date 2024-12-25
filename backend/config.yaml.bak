@@ -1,0 +1,28 @@
+App:
+  RunLevel: debug
+#  RunLevel: release
+
+WebServer:
+  Port: 8080
+  WriteTimeout: 10 #ms
+  ReadTimeout: 10 #ms
+
+Database:
+  DSN: disfinder:disfinder_passwd@tcp(127.0.0.1)/disfinder?charset=utf8mb4&parseTime=True&loc=Local
+Database_test:
+  DSN: disfinder:disfinder_passwd@tcp(127.0.0.1)/disfinder?charset=utf8mb4&parseTime=True&loc=Local
+
+Auth:
+  Secret: "sDxKfryE9s3FZWq7kjJl"
+
+Service:
+  PollingInterval: 1 #hour
+
+Scraper:
+  Host: "http://localhost:8888"
+
+Email:
+  Host: smtp.gmail.com
+  Port: 587
+  User: lx20040211@gmail.com
+  Password: "megumi0923"

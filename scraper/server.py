@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from AmazonParser import AmazonParser
 from EBayParser import EBayParser
-import utils
 
 app = Flask(__name__)
 
@@ -44,7 +43,7 @@ def search_handler(keyword: str) -> SearchResponse:
     results.extend(ebay_results)
     return SearchResponse(200, 'Success', results)
 
-@app.route('/spider/search', methods=['GET'])
+@app.route('/scraper/search', methods=['GET'])
 def spider_search():
     # 获取请求数据
     keyword = request.args.get('keyword')
@@ -70,7 +69,7 @@ def poll_handler(url):
     else:
         return PollResponse(400, 'Bad request', None)
 
-@app.route('/spider/poll', methods=['POST'])
+@app.route('/scraper/poll', methods=['POST'])
 def spider_poll():
     url = request.json.get('url')
     if not url:
@@ -81,4 +80,4 @@ def spider_poll():
 
 if __name__ == '__main__':
     
-    app.run(debug=False, port=8888)
+    app.run(debug=False, port=8888, host="0.0.0.0")

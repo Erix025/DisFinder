@@ -18,7 +18,7 @@ func Ping(c *gin.Context) {
 
 func SetupRouter(e *gin.Engine) {
 	config := cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost"},
+		AllowOrigins:     []string{"http://localhost:3010", "http://localhost"},
 		AllowCredentials: true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
