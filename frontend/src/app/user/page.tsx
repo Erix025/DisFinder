@@ -6,6 +6,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Button, Card, CardBody } from '@nextui-org/react';
 import { ErrorCode } from "../../models/error"
+import { User } from '@/models/models';
+import { UserGetInfoResp, Response } from '@/models/response';
+import { UserUpdatePasswordReq, UserUpdateInfoReq } from '@/models/request'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -21,7 +24,7 @@ export default function UserProfile() {
             const resp: Response = await response.json();
             console.log(resp)
             if (resp.code == ErrorCode.NoErr) {
-                const user_resp: UserGetInfoResp = resp.data;
+                const user_resp: UserGetInfoResp = resp.data as UserGetInfoResp;
                 const user: User = {
                     id: user_resp.id,
                     name: user_resp.name,

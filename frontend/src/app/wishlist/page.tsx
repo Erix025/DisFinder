@@ -2,10 +2,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardBody, CardFooter, Image, Button, Input, Pagination } from '@nextui-org/react';
+import { Card, CardBody, Image, Button, Pagination } from '@nextui-org/react';
 
+import { WishlistDeleteProductReq } from '@/models/request';
+import { Response, WishlistGetResp } from '@/models/response';
+import { Wishlist } from '@/models/models';
 import Navbar from '@/components/Navbar';
-import SearchBox from '@/components/SearchBox';
 import { useRouter } from 'next/navigation';
 
 import { ErrorCode } from '@/models/error';
@@ -16,7 +18,7 @@ export default function WishlistPage() {
     const router = useRouter();
     const [wishlist, setWishlist] = useState<Wishlist[]>([]);
     const [page_num, setPageNum] = useState(1);
-    const [page_size, setPageSize] = useState(20);
+    const [page_size] = useState(20);
     const [total, setTotal] = useState(0);
 
     const handlePageChange = (prev: number) => {
@@ -86,8 +88,9 @@ export default function WishlistPage() {
         const resp: Response = await response.json();
         console.log(resp)
         if (resp.code == ErrorCode.NoErr) {
-            setWishlist(resp.data.products);
-            setTotal(resp.data.total);
+            const data = resp.data as WishlistGetResp;
+            setWishlist(data.products);
+            setTotal(data.total);
         } else if (resp.code == ErrorCode.ErrNotLogin) {
             alert('Please login first');
             router.push('/auth');

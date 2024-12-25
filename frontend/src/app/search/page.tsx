@@ -8,10 +8,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ErrorCode } from '@/models/error';
 import { Pagination } from '@nextui-org/react';
-
+import { ProductInfo } from '@/models/models';
+import { Response, ProductGetListResp } from '@/models/response';
+import { Suspense } from 'react';
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-export default function SearchResultsPage() {
+function SearchPage() {
     const router = useRouter();
     const [results, setResults] = useState<ProductInfo[]>([]);
     const [total, setTotal] = useState(0);
@@ -42,12 +44,13 @@ export default function SearchResultsPage() {
             const resp: Response = await response.json();
             console.log(resp)
             if (resp.code == ErrorCode.NoErr) {
-                if (resp.data.products == null) {
+                const data: ProductGetListResp = resp.data as ProductGetListResp;
+                if (data.products == null) {
                     setResults([]);
                 } else {
-                    setResults(resp.data.products);
+                    setResults(data.products);
                 }
-                setTotal(resp.data.total);
+                setTotal(data.total);
             } else {
                 console.error(resp.msg);
             }
@@ -98,5 +101,13 @@ export default function SearchResultsPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function ResultsPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <SearchPage />
+        </Suspense>
     );
 }
