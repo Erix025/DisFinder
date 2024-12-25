@@ -3,9 +3,8 @@ import utils
 
 
 class AmazonParser(ParserBase):
-    def __init__(self, driver):
+    def __init__(self):
         super().__init__()
-        self.driver = driver if driver else utils.start_driver()
         self.base_url = 'https://www.amazon.com'
         self.search_url = 'https://www.amazon.com/s?k='
     
@@ -59,7 +58,7 @@ class AmazonParser(ParserBase):
         url = self.search_url + keyword
         print(keyword)
         print(url)
-        html = utils.fetch_page(self.driver, url)
+        html = utils.fetch_page(url)
         # save html
         # with open("amazon.html", "w") as f:
         #     f.write(str(html))
@@ -71,7 +70,7 @@ class AmazonParser(ParserBase):
     
     def poll(self, url) -> dict:
         price = 0
-        html = utils.fetch_page(self.driver, url)
+        html = utils.fetch_page(url)
         soup = utils.get_soup(html)
         price_element_whole = soup.find('span', {'class': 'a-price-whole'})
         price_element_fraction = soup.find('span', {'class': 'a-price-fraction'})

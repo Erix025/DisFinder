@@ -4,7 +4,6 @@ from EBayParser import EBayParser
 import utils
 
 app = Flask(__name__)
-driver = utils.start_driver()
 
 class SearchResponse:
     def __init__(self, code, msg, products):
@@ -32,15 +31,15 @@ class PollResponse:
             'data': self.data
         }
 
-def search_handler(driver, keyword: str) -> SearchResponse:
+def search_handler(keyword: str) -> SearchResponse:
     results = []
     keyword = keyword.replace(' ', '+')
     # search for amazon
-    amazon_parser = AmazonParser(driver)
+    amazon_parser = AmazonParser()
     amazon_results = amazon_parser.search(keyword)
     results.extend(amazon_results)
     # search for ebay
-    ebay_parser = EBayParser(driver)
+    ebay_parser = EBayParser()
     ebay_results = ebay_parser.search(keyword)
     results.extend(ebay_results)
     return SearchResponse(200, 'Success', results)
@@ -53,17 +52,17 @@ def spider_search():
         return jsonify(SearchResponse(400, 'Keyword is required', []).to_dict())
 
     # 返回搜索结果
-    return jsonify(search_handler(driver, keyword).to_dict())
+    return jsonify(search_handler(keyword).to_dict())
 
-def poll_handler(driver, url):
+def poll_handler(url):
     if 'amazon' in url:
-        parser = AmazonParser(driver)
+        parser = AmazonParser()
         price = parser.poll(url)
         if price < 0:
             return PollResponse(400, 'Failed', -1)
         return PollResponse(200, 'Success', price)
     elif 'ebay' in url:
-        parser = EBayParser(driver)
+        parser = EBayParser()
         price = parser.poll(url)
         if price < 0:
             return PollResponse(400, 'Failed', None)
@@ -77,9 +76,9 @@ def spider_poll():
     if not url:
         return jsonify(SearchResponse(400, 'Bad request', []).to_dict())
     
-    return jsonify(poll_handler(driver, url).to_dict())
+    return jsonify(poll_handler(url).to_dict())
 
 
 if __name__ == '__main__':
     
-    app.run(debug=True, port=8888)
+    app.run(debug=False, port=8888)

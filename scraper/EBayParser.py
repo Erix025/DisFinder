@@ -4,9 +4,8 @@ import re
 
 
 class EBayParser(ParserBase):
-    def __init__(self, driver):
+    def __init__(self):
         super().__init__()
-        self.driver = driver if driver else utils.start_driver()
         self.base_url = 'https://www.ebay.com'
         self.search_url = 'https://www.ebay.com/sch/i.html?_nkw='
     
@@ -64,7 +63,7 @@ class EBayParser(ParserBase):
         
     def search(self, keyword) -> list:
         url = self.search_url + keyword
-        html = utils.fetch_page(self.driver, url)
+        html = utils.fetch_page(url)
         # save html
         # with open("ebay.html", "w") as f:
         #     f.write(str(html))
@@ -82,7 +81,7 @@ class EBayParser(ParserBase):
     
     def poll(self, url) -> dict:
         price = 0
-        html = utils.fetch_page(self.driver, url)
+        html = utils.fetch_page(url)
         soup = utils.get_soup(html)
         price_element = soup.find('div', {'class': 'x-price-primary'})
         if price_element:
