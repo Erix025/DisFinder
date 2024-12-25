@@ -31,6 +31,7 @@ var rootCmd = &cobra.Command{
 		// init secret
 		// controller.InitSecret()
 		// init service
+		service.InitScraper()
 		service.InitService()
 		// start server
 		return api.StartServer()

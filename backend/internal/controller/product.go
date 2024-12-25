@@ -4,9 +4,8 @@ import (
 	"disfinder-backend/api/dto"
 	"disfinder-backend/internal/dao"
 	"disfinder-backend/internal/dao/model"
+	"disfinder-backend/internal/service"
 	"disfinder-backend/utils/stacktrace"
-	"encoding/json"
-	"net/http"
 	"strings"
 	"time"
 
@@ -48,30 +47,11 @@ func (p *ProductController) GetInfo(c *gin.Context, req *dto.ProductGetInfoReq) 
 }
 
 func SearchEngine(keyword string) ([]dto.SearchItem, error) {
-	var rawResp dto.SearchResp
-	// send http request to search engine
-	url := "http://localhost:8888/spider/search?keyword=" + keyword
-	httpResp, err := http.Get(url)
+	resp, err := service.GetScraper().Search(keyword)
 	if err != nil {
-		return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Search engine error")
+		return nil, err
 	}
-	defer httpResp.Body.Close()
-	// parse response
-	// print raw response
-	// Read the raw response body
-	//rawBody, err := io.ReadAll(httpResp.Body)
-	//if err != nil {
-	//	return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Failed to read response body")
-	//}
-
-	//// Print raw response
-	//logrus.Debug(string(rawBody))
-	err = json.NewDecoder(httpResp.Body).Decode(&rawResp)
-	if err != nil {
-		return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Search engine error")
-	}
-
-	return rawResp.Data, nil
+	return resp.Data, nil
 }
 
 func (p *ProductController) Search(c *gin.Context, req *dto.ProductSearchReq) error {

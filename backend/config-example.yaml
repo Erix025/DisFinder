@@ -18,6 +18,9 @@ Auth:
 Service:
   PollingInterval: 1 #hour
 
+Scraper:
+  Host: "http://localhost:8888"
+
 Email:
   Host: smtp.gmail.com
   Port: 587
