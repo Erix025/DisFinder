@@ -7,11 +7,12 @@ import (
 	"disfinder-backend/internal/dao/model"
 	"disfinder-backend/utils/stacktrace"
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/guregu/null.v4"
-	"net/http"
-	"time"
 )
 
 type DiscountNoticeItem struct {
@@ -111,10 +112,9 @@ func Polling() {
 		}
 		// update price history
 		newHistory := model.PriceHistory{
-			ProductID:  wishlist.ProductID,
-			Price:      price,
-			Date:       null.NewTime(time.Now(), true),
-			PlatformID: history.PlatformID,
+			ProductID: wishlist.ProductID,
+			Price:     price,
+			Date:      null.NewTime(time.Now(), true),
 		}
 		err = dao.DB(nil).Save(&newHistory).Error
 		if err != nil {
@@ -150,5 +150,5 @@ func InitService() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	InitPolling(time.Duration(cfg.PollingInterval) * time.Second)
+	InitPolling(time.Duration(cfg.PollingInterval) * time.Hour)
 }

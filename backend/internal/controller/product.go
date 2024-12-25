@@ -6,11 +6,12 @@ import (
 	"disfinder-backend/internal/dao/model"
 	"disfinder-backend/utils/stacktrace"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"gopkg.in/guregu/null.v4"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"gopkg.in/guregu/null.v4"
 )
 
 type IProductController interface {
@@ -42,6 +43,7 @@ func (p *ProductController) GetInfo(c *gin.Context, req *dto.ProductGetInfoReq) 
 	resp.Name = info.Name
 	resp.Picture = info.Picture
 	resp.URL = info.URL
+	resp.PlatformID = info.PlatformID
 	return &resp, nil
 }
 
@@ -81,9 +83,10 @@ func (p *ProductController) Search(c *gin.Context, req *dto.ProductSearchReq) er
 	// add to database
 	for _, item := range searchResult {
 		newProduct := model.Product{
-			Name:    item.Title,
-			Picture: item.Image,
-			URL:     item.URL,
+			Name:       item.Title,
+			Picture:    item.Image,
+			URL:        item.URL,
+			PlatformID: item.PlatformID,
 		}
 		err := dao.DB(c).Create(&newProduct).Error
 		if err != nil {
@@ -95,10 +98,9 @@ func (p *ProductController) Search(c *gin.Context, req *dto.ProductSearchReq) er
 			}
 		}
 		newPriceHistory := model.PriceHistory{
-			ProductID:  newProduct.ID,
-			PlatformID: item.PlatformID,
-			Date:       null.NewTime(time.Now(), true),
-			Price:      item.Price,
+			ProductID: newProduct.ID,
+			Date:      null.NewTime(time.Now(), true),
+			Price:     item.Price,
 		}
 		err = dao.DB(c).Create(&newPriceHistory).Error
 		if err != nil {
@@ -136,11 +138,12 @@ func (p *ProductController) GetList(c *gin.Context, req *dto.ProductGetListReq) 
 			return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Database error")
 		}
 		resp.Products = append(resp.Products, dto.ProductInfo{
-			ID:      item.ID,
-			Name:    item.Name,
-			Picture: item.Picture,
-			URL:     item.URL,
-			Price:   history.Price,
+			ID:         item.ID,
+			Name:       item.Name,
+			Picture:    item.Picture,
+			URL:        item.URL,
+			PlatformID: item.PlatformID,
+			Price:      history.Price,
 		})
 	}
 	return &resp, nil
@@ -160,10 +163,9 @@ func (p *ProductController) GetHistory(c *gin.Context, req *dto.ProductGetHistor
 	}
 	for _, h := range history {
 		resp.History = append(resp.History, dto.ProductHistoryItem{
-			ProductID:  h.ProductID,
-			PlatformID: h.PlatformID,
-			Date:       h.Date,
-			Price:      h.Price,
+			ProductID: h.ProductID,
+			Date:      h.Date,
+			Price:     h.Price,
 		})
 	}
 	return &resp, nil

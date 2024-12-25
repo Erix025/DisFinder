@@ -1,15 +1,52 @@
 // components/SearchBox.tsx
 'use client';  // 表明该组件在客户端渲染
 
-import { Input, Button, Spacer } from '@nextui-org/react';
+import { Input, Button, Spacer, Spinner } from '@nextui-org/react';
 import { useState } from 'react';
 import { SearchIcon } from "./SearchIcon.jsx";
+import { useRouter } from 'next/navigation.js';
+import { ErrorCode } from '@/models/error';
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 const SearchBox = () => {
     const [query, setQuery] = useState('');
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const fetchSearch = async () => {
+        const response = await fetch(`${apiUrl}/api/product/search?keyword=${query}`, {
+            method: 'POST',
+            credentials: 'include',
+        });
+        if (!response.ok) {
+            console.error('Failed to search');
+            setIsLoading(false);
+            return;
+        }
+
+        const resp: Response = await response.json();
+        console.log(resp)
+        if (resp.code == ErrorCode.NoErr) {
+            router.replace(`/search?keyword=${query}`);
+        } else {
+            console.error(resp.msg);
+        }
+        setIsLoading(false);
+    };
 
     const handleSearch = () => {
-        console.log('搜索内容:', query);
+        if (query === '') return;
+        setIsLoading(true);
+        // search
+        fetchSearch();
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        console.log(e.key)
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
     };
 
     return (
@@ -20,6 +57,9 @@ const SearchBox = () => {
                     isClearable
                     size='lg'
                     radius="lg"
+                    onKeyDown={handleKeyDown}
+                    onChange={(e) => setQuery(e.target.value)}
+                    disabled={isLoading}
                     classNames={{
                         label: "text-black/50 dark:text-white/90",
                         input: [
@@ -45,8 +85,12 @@ const SearchBox = () => {
                     startContent={
                         <SearchIcon className="text-black/50 mb-0.5 dark:text-white/90 text-slate-400 pointer-events-none flex-shrink-0" />
                     }
-
                 />
+                {
+                    isLoading ? <Spinner color='default' /> : <Button onClick={handleSearch} className="ml-2">
+                        Search
+                    </Button>
+                }
             </div >
         </div>
     );

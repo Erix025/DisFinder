@@ -5,6 +5,7 @@ import MyNavbar from '../components/Navbar';
 import SearchBox from '../components/SearchBox';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
+
 export default function HomePage() {
   return (
     <div className="h-screen w-full text-foreground bg-background">

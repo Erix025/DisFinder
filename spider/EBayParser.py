@@ -66,8 +66,8 @@ class EBayParser(ParserBase):
         url = self.search_url + keyword
         html = utils.fetch_page(self.driver, url)
         # save html
-        with open("ebay.html", "w") as f:
-            f.write(str(html))
+        # with open("ebay.html", "w") as f:
+        #     f.write(str(html))
         result_list = self.get_result_list(html)
         res_list = [self.parse_result(result) for result in result_list]
         res_list = [res for res in res_list if res]

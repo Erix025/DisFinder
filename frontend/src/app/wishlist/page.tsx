@@ -1,37 +1,107 @@
 // app/wishlist/page.tsx
 'use client';
 
-import { useState } from 'react';
-import { Card, CardBody, CardFooter, Image, Button, Input } from '@nextui-org/react';
+import { useEffect, useState } from 'react';
+import { Card, CardBody, CardFooter, Image, Button, Input, Pagination } from '@nextui-org/react';
 
 import Navbar from '@/components/Navbar';
 import SearchBox from '@/components/SearchBox';
+import { useRouter } from 'next/navigation';
 
-// 模拟的愿望单商品数据
-const mockWishlist = [
-    { id: 1, name: "Smartphone XYZ", img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg", price: "$499" },
-    { id: 2, name: "Laptop ABC", img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardD_Desktop2x_372x232_sweaters._SY232_CB562560740_.jpg", price: "$899" },
-    { id: 3, name: "Headphones Pro", img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardB_Desktop2x_372x232_boots._SY232_CB562560740_.jpg", price: "$199" },
-    { id: 4, name: "Smartwatch 2.0", img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardC_Desktop2x_372x232_skincare._SY232_CB562560740_.jpg", price: "$129" },
-    { id: 5, name: "Camera Pro", img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/Prime/Adhoc/QuadCardSG/DQC_EN_Grubhub_372x232._SY232_CB570294461_.jpg", price: "$799" },
-];
+import { ErrorCode } from '@/models/error';
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export default function WishlistPage() {
-    const [wishlist, setWishlist] = useState(mockWishlist);
-    const [searchTerm, setSearchTerm] = useState('');
+    const router = useRouter();
+    const [wishlist, setWishlist] = useState<Wishlist[]>([]);
+    const [page_num, setPageNum] = useState(1);
+    const [page_size, setPageSize] = useState(20);
+    const [total, setTotal] = useState(0);
+
+    const handlePageChange = (prev: number) => {
+        setPageNum(prev);
+    };
+
+    const handleCardClick = (id: number) => {
+        router.push(`/product/${id}`);
+    };
 
     // 删除商品
     const handleRemoveItem = (id: number) => {
-        setWishlist(wishlist.filter(item => item.id !== id));
+        const fetchRemoveItem = async () => {
+            const req: WishlistDeleteProductReq = {
+                id: id,
+            };
+            const response = await fetch(`${apiUrl}/api/wishlist/delete`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(req),
+            });
+
+            const resp: Response = await response.json();
+            console.log(resp)
+            if (resp.code == ErrorCode.NoErr) {
+                alert('Remove success');
+                fetchWishlist();
+            } else {
+                console.error(resp.msg);
+            }
+        };
+        fetchRemoveItem();
     };
 
     // 清空愿望单
     const handleClearWishlist = () => {
-        setWishlist([]);
+        // pop up a confirm dialog
+        if (!confirm('Are you sure to clear wishlist?')) {
+            return;
+        }
+        const fetchClearWishlist = async () => {
+            const response = await fetch(`${apiUrl}/api/wishlist/clear`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            const resp: Response = await response.json();
+            console.log(resp)
+            if (resp.code == ErrorCode.NoErr) {
+                fetchWishlist();
+            } else {
+                console.error(resp.msg);
+            }
+        }
+        fetchClearWishlist();
     };
 
-    // 筛选愿望单
-    const filteredWishlist = wishlist.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const fetchWishlist = async () => {
+        const response = await fetch(`${apiUrl}/api/wishlist?page_num=${page_num - 1}&page_size=${page_size}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        const resp: Response = await response.json();
+        console.log(resp)
+        if (resp.code == ErrorCode.NoErr) {
+            setWishlist(resp.data.products);
+            setTotal(resp.data.total);
+        } else if (resp.code == ErrorCode.ErrNotLogin) {
+            alert('Please login first');
+            router.push('/auth');
+        } else if (resp.code == ErrorCode.ErrEmptyWishlist) {
+            setWishlist([]);
+            setTotal(0);
+        } else {
+            console.error(resp.msg);
+        }
+    }
+
+    useEffect(() => {
+        fetchWishlist();
+    }, [page_num, page_size]);
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -39,11 +109,6 @@ export default function WishlistPage() {
             <div className="max-w-4xl mx-auto mt-10 p-4">
 
                 <div className="flex items-center">
-                    {/* 搜索框 */}
-                    <div className="flex-grow flex justify-start">
-                        <SearchBox />
-                    </div>
-
                     {/* 清空愿望单按钮 */}
                     <div className="flex justify-end">
                         <Button color="danger" onClick={handleClearWishlist}>Clear Wishlist</Button>
@@ -52,15 +117,15 @@ export default function WishlistPage() {
 
 
                 {/* 须要显示的愿望单商品 */}
-                {filteredWishlist.length > 0 ? (
+                {total > 0 ? (
                     <div className='mt-4'>
-                        {filteredWishlist.map(item => (
-                            <Card key={item.id} className="shadow-md mb-4 bg-default-50">
+                        {wishlist.map(item => (
+                            <Card key={item.id} className="shadow-md mb-4 bg-default-50" isPressable onPress={() => handleCardClick(item.id)} >
                                 <CardBody className="flex-row gap-4 items-center justify-center"> {/* 水平排列元素 */}
                                     {/* 图片 */}
                                     <div className="flex-shrink-0">
                                         <Image
-                                            src={item.img}
+                                            src={item.picture}
                                             alt={item.name}
                                             width="100"
                                             height="auto"
@@ -71,7 +136,7 @@ export default function WishlistPage() {
                                     {/* 商品描述和价格 */}
                                     <div className="flex-1">
                                         <h3 className="text-lg font-semibold">{item.name}</h3>
-                                        <p className="text-sm text-gray-500">{item.price}</p>
+                                        {/* <p className="text-sm text-gray-500">{item.price}</p> */}
                                     </div>
 
                                     {/* 删除按钮 */}
@@ -87,6 +152,9 @@ export default function WishlistPage() {
                                 </CardBody>
                             </Card>
                         ))}
+                        <div className='mx-auto mt-8'>
+                            <Pagination showControls total={Math.ceil(total / page_size)} page={page_num} onChange={handlePageChange} size='lg' />
+                        </div>
                     </div>
                 ) : (
                     <p className="text-center text-gray-500">No items in your wishlist</p>
@@ -94,6 +162,6 @@ export default function WishlistPage() {
 
 
             </div>
-        </div>
+        </div >
     );
 }

@@ -4,60 +4,56 @@
 import SearchBox from '@/components/SearchBox';
 import Navbar from '../../components/Navbar';
 import { Card, CardBody, CardFooter, Image } from "@nextui-org/react";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { ErrorCode } from '@/models/error';
+import { Pagination } from '@nextui-org/react';
 
-const mockResults = [
-    {
-        title: "Orange",
-        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
-        price: "$5.50",
-    },
-    {
-        title: "Tangerine",
-        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
-        price: "$3.00",
-    },
-    {
-        title: "Raspberry",
-        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
-        price: "$10.00",
-    },
-    {
-        title: "Lemon",
-        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
-        price: "$5.30",
-    },
-    {
-        title: "Avocado",
-        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
-        price: "$15.70",
-    },
-    {
-        title: "Lemon 2",
-        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
-        price: "$8.00",
-    },
-    {
-        title: "Banana",
-        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
-        price: "$7.50",
-    },
-    {
-        title: "Watermelon",
-        img: "https://images-na.ssl-images-amazon.com/images/G/01/DiscoTec/2024/LS/Fall/LSFall_Cold_HPQuadCardA_Desktop2x_372x232_outerwear._SY232_CB562560740_.jpg",
-        price: "$12.20",
-    },
-];
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export default function SearchResultsPage() {
     const router = useRouter();
-    const [results, setResults] = useState(mockResults);
+    const [results, setResults] = useState<ProductInfo[]>([]);
+    const [total, setTotal] = useState(0);
+
+    const params = useSearchParams();
+
+    const keyword = params.get('keyword');
+    const page_size = 20;
+    const [page_num, setPageNum] = useState(1);
+
+    const handlePageChange = (prev: number) => {
+        setPageNum(prev);
+    };
+
+    const handleCardClick = (id: number) => {
+        router.push(`/product/${id}`);
+    };
 
     useEffect(() => {
-        // 模拟搜索结果数据
-        setResults(mockResults);
-    }, []);
+        // get products from backend
+        const fetchResults = async () => {
+            const searchUrl = `${apiUrl}/api/product/list?keyword=${keyword}&page_num=${page_num - 1}&page_size=${page_size}`;
+            const response = await fetch(searchUrl, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            const resp: Response = await response.json();
+            console.log(resp)
+            if (resp.code == ErrorCode.NoErr) {
+                if (resp.data.products == null) {
+                    setResults([]);
+                } else {
+                    setResults(resp.data.products);
+                }
+                setTotal(resp.data.total);
+            } else {
+                console.error(resp.msg);
+            }
+        };
+        fetchResults();
+    }, [keyword, page_num]);
 
     return (
         <div className="min-h-screen text-foreground bg-background">
@@ -72,25 +68,30 @@ export default function SearchResultsPage() {
 
                 {/* 搜索结果展示区域 */}
                 {results.length > 0 ? (
-                    <div className="gap-2 grid grid-cols-2 sm:grid-cols-4 mt-8">
-                        {mockResults.map((item, index) => (
-                            <Card shadow="sm" key={index} isPressable onPress={() => console.log("item pressed")}>
-                                <CardBody className="overflow-visible p-0">
-                                    <Image
-                                        shadow="sm"
-                                        radius="lg"
-                                        width="100%"
-                                        alt={item.title}
-                                        className="w-full object-cover h-[140px]"
-                                        src={item.img}
-                                    />
-                                </CardBody>
-                                <CardFooter className="text-small justify-between">
-                                    <b>{item.title}</b>
-                                    <p className="text-default-500">{item.price}</p>
-                                </CardFooter>
-                            </Card>
-                        ))}
+                    <div className='flex flex-col justify-center'>
+                        <div className="gap-2 grid grid-cols-2 sm:grid-cols-4 mt-8">
+                            {results.map((product) => (
+                                <Card shadow="sm" key={product.id} isPressable onPress={() => handleCardClick(product.id)}>
+                                    <CardBody className="overflow-visible p-0">
+                                        <Image
+                                            shadow="sm"
+                                            radius="lg"
+                                            width="100%"
+                                            alt={product.name}
+                                            className="w-full object-cover h-[140px]"
+                                            src={product.picture}
+                                        />
+                                    </CardBody>
+                                    <CardFooter className="text-small justify-between flex flex-col">
+                                        <b className="line-clamp-2">{product.name}</b>
+                                        <b className="text-blue-500 text-lg">$ {product.price}</b>
+                                    </CardFooter>
+                                </Card>
+                            ))}
+                        </div>
+                        <div className='mx-auto mt-8'>
+                            <Pagination showControls total={Math.ceil(total / page_size)} page={page_num} onChange={handlePageChange} size='lg' />
+                        </div>
                     </div>
                 ) : (
                     <p className="text-center text-gray-500 mt-10">未找到相关商品</p>
