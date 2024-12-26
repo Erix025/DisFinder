@@ -29,7 +29,6 @@ type DBCfg struct {
 }
 
 func InitPlatform() {
-	// TODO: Add platform data
 	platforms := []model.Platform{
 		{1, "Amazon"}, {2, "EBay"},
 	}

@@ -1,13 +1,9 @@
 package service
 
 import (
-	"bytes"
 	"disfinder-backend/api/dto"
 	"disfinder-backend/internal/dao"
 	"disfinder-backend/internal/dao/model"
-	"disfinder-backend/utils/stacktrace"
-	"encoding/json"
-	"net/http"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -43,28 +39,14 @@ func Notify(notices map[uint][]DiscountNoticeItem) {
 }
 
 func PollingEngine(url string) (float64, error) {
-	var rawResp dto.PollingResp
 	req := dto.PollingReq{
 		URL: url,
 	}
-	// send http request to search engine
-	reqUrl := "http://localhost:8888/spider/poll"
-	jsonReq, err := json.Marshal(req)
+	resp, err := GetScraper().Poll(req)
 	if err != nil {
-		return 0, stacktrace.PropagateWithCode(err, dto.InternalError, "Search engine error")
+		return 0, err
 	}
-	httpResp, err := http.Post(reqUrl, "application/json", bytes.NewReader(jsonReq))
-	if err != nil {
-		return 0, stacktrace.PropagateWithCode(err, dto.InternalError, "Search engine error")
-	}
-	defer httpResp.Body.Close()
-
-	err = json.NewDecoder(httpResp.Body).Decode(&rawResp)
-	if err != nil {
-		return 0, stacktrace.PropagateWithCode(err, dto.InternalError, "Search engine error")
-	}
-
-	return rawResp.Data, nil
+	return resp.Data, nil
 }
 
 func Polling() {

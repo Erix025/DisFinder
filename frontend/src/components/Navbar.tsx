@@ -1,13 +1,14 @@
 'use client';  // 表明该组件在客户端渲染
 
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Link, Input, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar, Button } from "@nextui-org/react";
+import { Navbar, NavbarBrand, NavbarContent, Link, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar, Button } from "@nextui-org/react";
 import { Logo } from "./Logo.jsx";
-import { SearchIcon } from "./SearchIcon.jsx";
 import { WishlistIcon } from "./WishlistIcon.jsx";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { ErrorCode } from "../models/error"
 import { useRouter } from 'next/navigation';
+import { User } from "@/models/models.jsx";
+import { Response, UserGetInfoResp } from "@/models/response.jsx";
 
 import { DarkIcon } from "./DarkIcon.jsx"
 import { LightIcon } from "./LightIcon.jsx"
@@ -58,7 +59,7 @@ export default function App() {
             const resp: Response = await response.json();
             console.log(resp)
             if (resp.code == ErrorCode.NoErr) {
-                const user_resp: UserGetInfoResp = resp.data;
+                const user_resp: UserGetInfoResp = resp.data as UserGetInfoResp;
                 const user: User = {
                     id: user_resp.id,
                     name: user_resp.name,

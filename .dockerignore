@@ -1,0 +1,14 @@
+.git
+*.log
+
+# backend
+.idea
+
+# frontend
+.next
+.vscode
+node_modules
+
+# scraper
+__pycache__
+tmp

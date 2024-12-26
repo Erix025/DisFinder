@@ -1,11 +1,12 @@
 // components/SearchBox.tsx
 'use client';  // 表明该组件在客户端渲染
 
-import { Input, Button, Spacer, Spinner } from '@nextui-org/react';
+import { Input, Button, Spinner } from '@nextui-org/react';
 import { useState } from 'react';
 import { SearchIcon } from "./SearchIcon.jsx";
 import { useRouter } from 'next/navigation.js';
 import { ErrorCode } from '@/models/error';
+import { Response } from '@/models/response.jsx';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 

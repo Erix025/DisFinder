@@ -2,12 +2,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Card, CardBody, CardFooter, Image } from '@nextui-org/react';
-import dynamic from 'next/dynamic';
-import { Props } from 'react-apexcharts';
+import { Button, Card, CardBody, Image } from '@nextui-org/react';
 import { useTheme } from 'next-themes';
 import { useParams, useRouter } from 'next/navigation';
 import { ErrorCode } from '@/models/error';
+import { Response, PlatformGetNameResp, ProductGetInfoResp, ProductGetHistoryResp } from '@/models/response';
+import { ProductInfo, PriceHistory } from '@/models/models';
+import { ProductGetHistoryReq, WishlistAddProductReq } from '@/models/request';
 
 import Navbar from '@/components/Navbar';
 
@@ -17,15 +18,19 @@ import { Link } from '@nextui-org/react'
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
+interface ChartData {
+    name: string;
+    price: number;
+}
+
 export default function ProductComparisonPage() {
     const [product, setProduct] = useState<ProductInfo>();
     const [histories, setHistories] = useState<PriceHistory[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
     const params = useParams();
     const id = Number(params.id);
     const [platform, setPlatform] = useState<string>('');
-    const [data, setData] = useState([]);
+    const [data, setData] = useState<ChartData[]>([]);
 
     const fetchAddWishlist = async () => {
         const req: WishlistAddProductReq = {
@@ -63,7 +68,8 @@ export default function ProductComparisonPage() {
         const resp: Response = await response.json();
         console.log(resp)
         if (resp.code == ErrorCode.NoErr) {
-            return resp.data.name;
+            const data: PlatformGetNameResp = resp.data as PlatformGetNameResp;
+            return data.name;
         } else {
             console.error(resp.msg);
         }
@@ -89,13 +95,14 @@ export default function ProductComparisonPage() {
         const resp: Response = await response.json();
         console.log(resp)
         if (resp.code == ErrorCode.NoErr) {
+            const data = resp.data as ProductGetInfoResp;
             const product: ProductInfo = {
-                id: resp.data.id,
-                name: resp.data.name,
-                picture: resp.data.picture,
-                url: resp.data.url,
+                id: data.id,
+                name: data.name,
+                picture: data.picture,
+                url: data.url,
                 price: 0,
-                platform_id: resp.data.platform_id,
+                platform_id: data.platform_id,
             }
             setProduct(product);
             fetchPlatform(product.platform_id).then((name) => setPlatform(name));
@@ -123,9 +130,10 @@ export default function ProductComparisonPage() {
         const resp: Response = await response.json();
         console.log(resp)
         if (resp.code == ErrorCode.NoErr) {
-            setHistories(resp.data.history);
-            var new_data = [];
-            resp.data.history.forEach((item: PriceHistory) => {
+            const data = resp.data as ProductGetHistoryResp;
+            setHistories(data.history);
+            const new_data: ChartData[] = [];
+            data.history.forEach((item: PriceHistory) => {
                 new_data.push({ name: formatDate(item.date), price: item.price });
             });
             setData(new_data);
@@ -137,7 +145,6 @@ export default function ProductComparisonPage() {
         // fetch product info
         fetchProduct();
         fetchPrice();
-        setIsLoading(true);
         router.refresh();
     }, []);
 

@@ -1,42 +1,42 @@
-interface UserLoginReq {
+export interface UserLoginReq {
     email: string;
     password: string;
 }
 
-interface UserRegisterReq {
+export interface UserRegisterReq {
     email: string;
     name: string;
     password: string;
 }
 
-interface UserUpdateInfoReq {
+export interface UserUpdateInfoReq {
     id: number;
     name: string;
     email: string;
 }
 
-interface UserUpdatePasswordReq {
+export interface UserUpdatePasswordReq {
     id: number;
     old_password: string;
     new_password: string;
 }
 
-interface ProductGetListReq {
+export interface ProductGetListReq {
     keyword: string;
     page_num: number;
     page_size: number;
 }
 
-interface ProductGetHistoryReq {
+export interface ProductGetHistoryReq {
     product_id: number;
     start_date: string;
     end_date: string;
 }
 
-interface WishlistAddProductReq {
+export interface WishlistAddProductReq {
     id: number;
 }
 
-interface WishlistDeleteProductReq {
+export interface WishlistDeleteProductReq {
     id: number;
 }

@@ -1,32 +1,39 @@
-interface Response {
+import { PriceHistory, ProductInfo, Wishlist } from './models';
+export interface Response {
     code: number;
     msg: string;
-    data: any;
+    data: unknown;
 }
 
-interface UserGetInfoResp {
+export interface UserGetInfoResp {
     id: number;
     name: string;
     email: string;
 }
 
-interface ProductGetListResp {
+export interface ProductGetListResp {
     products: ProductInfo[];
     total: number;
 }
 
-interface ProductGetInfoResp {
+export interface ProductGetInfoResp {
     id: number;
     name: string;
     picture: string;
     url: string;
+    platform_id: number;
 }
 
-interface PlatformGetNameResp {
+export interface PlatformGetNameResp {
     id: number;
     name: string;
 }
 
-interface ProductGetHistoryResp {
+export interface ProductGetHistoryResp {
     history: PriceHistory[];
+}
+
+export interface WishlistGetResp {
+    products: Wishlist[];
+    total: number;
 }

@@ -1,17 +1,17 @@
-interface User {
+export interface User {
     id: number;
     name: string;
     email: string;
 }
 
-interface Wishlist {
+export interface Wishlist {
     id: number;
     name: string;
     picture: string;
     url: string;
 }
 
-interface ProductInfo {
+export interface ProductInfo {
     id: number;
     name: string;
     picture: string;
@@ -20,7 +20,7 @@ interface ProductInfo {
     platform_id: number;
 }
 
-interface PriceHistory {
+export interface PriceHistory {
     id: number;
     price: number;
     date: string;

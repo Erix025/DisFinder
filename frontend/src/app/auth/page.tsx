@@ -2,10 +2,12 @@
 'use client';
 
 import React from 'react';
-import { Tabs, Tab, Input, Link, Button, Card, CardBody, CardHeader } from "@nextui-org/react";
+import { Tabs, Tab, Input, Link, Button, Card, CardBody } from "@nextui-org/react";
 import Navbar from '../../components/Navbar';
 import { ErrorCode } from "../../models/error"
 import { useRouter } from 'next/navigation';
+import { UserLoginReq, UserRegisterReq } from "@/models/request"
+import { Response } from '@/models/response';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -153,7 +155,7 @@ export default function AuthPage() {
                                 size="md"
                                 aria-label="Tabs form"
                                 selectedKey={selected}
-                                onSelectionChange={setSelected}
+                                onSelectionChange={(value) => setSelected(value as string)}
                             >
                                 <Tab key="login" title="Login">
                                     <form className="flex flex-col gap-4 h-full">
