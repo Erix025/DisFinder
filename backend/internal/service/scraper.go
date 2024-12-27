@@ -5,9 +5,10 @@ import (
 	"disfinder-backend/api/dto"
 	"disfinder-backend/utils/stacktrace"
 	"encoding/json"
+	"net/http"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"net/http"
 )
 
 type Scraper struct {
@@ -23,14 +24,14 @@ func GetScraper() *Scraper {
 	return scraper
 }
 
-type ScraperConfig struct {
-	Host string
-}
-
 func newScraper(host string) *Scraper {
 	return &Scraper{
 		host: host,
 	}
+}
+
+type ScraperConfig struct {
+	Host string
 }
 
 func InitScraper() {

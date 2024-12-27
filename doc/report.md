@@ -548,10 +548,961 @@ const handleRegister = async (e: React.FormEvent) => {
 
 ## 后端设计
 
+### 架构设计
+
+![后端架构设计示意图](assets/report/backend_architecture.png)
+
+后端的架构设计参考了 [go-svc-tpl](https://github.com/thorn-jmh/go-svc-tpl) 的实现。如图所示，主要分为 API层、Controller层、Model 层、Service 层、DAO 层部分。
+
+- API 层：负责处理前端的请求，将请求转发给 Controller 层。其中包括 API 的一系列数据模型定义（dto）和服务器的路由配置（router）。
+- Controller 层：负责处理业务逻辑，调用 DAO 层和 Service 层进行数据操作。对每一个请求都有一个对应的 Controller 函数。
+- Model 层：负责定义数据模型，包括用户信息、商品信息、价格信息等。这里使用了 GORM 进行数据库操作，因此定义了 GORM 的数据模型。
+- DAO 层：负责与数据库进行交互，对数据库进行增删改查等操作。这里使用了 GORM 进行数据库操作，因此 DAO 层主要是对 GORM 的封装。
+- Service 层：负责将一些复杂的业务逻辑封装成一个个的服务，供 Controller 层调用。其中主要包括商品搜索、商品价格获取和邮件推送服务。商品搜索服务和商品价格获取服务主要是调用爬虫模块，获取商品信息。邮件推送服务主要是向用户发送邮件推送消息。
+
+下面我们逐一介绍这几个部分的设计。
+
+### API 层
+
+API 层主要包括 API 的一系列数据模型定义（dto）和服务器的路由配置（router）。
+
+#### 数据模型定义
+
+数据模型定义主要包括请求和响应的数据模型，保证了 API 的统一性。下面以 `ProductGetInfo` 接口为例，介绍数据模型的定义。
+
+```go
+type ProductGetInfoReq struct {
+	ID uint `form:"id"`
+}
+
+type ProductGetInfoResp struct {
+	ID         uint   `json:"id"`
+	Name       string `json:"name"`
+	Picture    string `json:"picture"`
+	URL        string `json:"url"`
+	PlatformID uint   `json:"platform_id"`
+}
+```
+
+同时我们还定义了一些错误码，保证了 API 的统一性。
+
+```go
+const (
+	NoErr           stacktrace.ErrorCode = iota // No error
+	ErrEmailExist                               // 邮箱已被使用
+	ErrPassword                                 // 密码错误
+	ErrUserNotFound                             // 用户不存在
+
+	ErrNotLogin  // 用户未登录
+	ErrPrivilege // 权限不存在
+
+	ErrPlatformNotFound // 平台不存在
+	ErrProductNotFound  // 产品不存在
+	ErrProductExist     // 产品已存在
+
+	ErrSearchOutOfRange // 搜索范围超出限制
+
+	ErrInvalidPage // 页码错误
+
+	ErrEmptyWishlist // 心愿单为空
+
+	ErrInvalidRequest // 参数错误
+
+	BadRequest    stacktrace.ErrorCode = 400
+	InternalError stacktrace.ErrorCode = 500
+)
+```
+
+#### 路由配置
+
+路由配置主要包括了服务器的路由配置，将请求转发给 Controller 层。下面以 `ProductGetInfo` 接口为例，介绍路由配置的定义。
+
+首先我们需要将指定路径的请求转发给指定的 Controller 函数。这里我们使用了 Gin 框架的 `GET` 方法，将 `/product/info` 路径的 GET 请求转发给 `ProductGetInfo` 函数。
+
+```go
+func setupProductController(r *gin.RouterGroup) {
+	cw := ProductCtlWrapper{
+		ctl: controller.NewProductController(),
+	}
+	p := r.Group("/product")
+	p.GET("/info", cw.GetInfo)
+	p.POST("/search", cw.Search)
+	p.POST("/history", cw.GetHistory)
+	p.POST("/list", cw.GetList)
+}
+```
+
+然后在绑定的 handler 函数中，我们需要解析请求参数，调用 Controller 函数，返回响应。
+
+```go
+func (w *ProductCtlWrapper) GetInfo(c *gin.Context) {
+	var req dto.ProductGetInfoReq
+	if err := dto.BindReq(c, &req); err != nil {
+		dto.ResponseFail(c, err)
+		return
+	}
+	resp, err := w.ctl.GetInfo(c, &req)
+	if err != nil {
+		dto.ResponseFail(c, err)
+		return
+	}
+	dto.ResponseSuccess(c, resp)
+}
+```
+
+这样我们就完成了请求的处理，其他接口的处理逻辑类似，这里不再赘述。
+
+需要注意的是，对于需要鉴权的请求，我们需要在路由配置中添加鉴权中间件，保证了 API 的安全性。关于鉴权中间件的实现，我们将在 Controller 层中介绍。
+
+```go
+func setupUserController(r *gin.RouterGroup) {
+	cw := UserCtlWrapper{
+		ctl: controller.NewUserController(),
+	}
+	p := r.Group("/user")
+	p.POST("/register", cw.Register)
+	p.POST("/login", cw.Login)
+	p.POST("/logout", controller.AuthMidWare(), cw.Logout)
+	p.GET("/info", controller.AuthMidWare(), cw.GetInfo)
+	p.POST("/info", controller.AuthMidWare(), cw.UpdateInfo)
+	p.POST("/passwd", controller.AuthMidWare(), cw.UpdatePwd)
+}
+```
+
+### Model 层
+
+Model 层主要包括了数据模型的定义，保证了数据的一致性。这里我们使用了 GORM 进行数据库操作，因此定义了 GORM 的数据模型。
+
+##### User
+
+```go
+type User struct {
+	ID       uint   `json:"id" gorm:"column:id;primary_key;AUTO_INCREMENT"`
+	Name     string `json:"name" gorm:"column:name;type:varchar(255);not null"`
+	Password string `json:"password" gorm:"column:password;type:varchar(255);not null"`
+	Email    string `json:"email" gorm:"column:email;type:varchar(255);unique;not null"`
+}
+```
+
+这里我们定义了用户的 ID、用户名、密码、邮箱等信息，指定 email 为唯一键，用户将通过邮箱进行登录。同时我们约束用户名、密码、邮箱等字段的长度和非空性。
+
+##### Platform
+
+```go
+type Platform struct {
+	ID   uint   `json:"id" gorm:"column:id;primary_key;AUTO_INCREMENT"`
+	Name string `json:"name" gorm:"column:name;type:varchar(255);not null"`
+}
+```
+
+这里我们定义了电商平台的 ID 和名称，用户可以通过平台 ID 获取平台名称。虽然在我们的应用中，平台名称是固定的，但是我们仍然将其定义为一个数据模型，保证了数据的一致性，并且方便了后续的扩展。
+
+##### Product
+
+```go
+type Product struct {
+	ID         uint     `json:"id" gorm:"column:id;primary_key;AUTO_INCREMENT"`
+	Name       string   `json:"name" gorm:"column:name;type:varchar(255);not null;unique"`
+	Picture    string   `json:"picture" gorm:"column:picture;type:text;not null"`
+	URL        string   `json:"url" gorm:"column:url;type:text;not null"`
+	PlatformID uint     `json:"platform_id" gorm:"column:platform_id;type:int;not null"`
+	Platform   Platform `json:"platform" gorm:"foreignKey:PlatformID;references:ID"`
+}
+```
+
+这里我们定义了商品的 ID、名称、图片、链接、平台 ID 等信息，用户可以通过商品 ID 获取商品的详细信息。同时我们约束商品名称、图片、链接等字段的长度和非空性。
+
+需要注意的是，由于电商平台商品名称的特殊性，我们确定每一个商品名称只能对应一个平台，因此我们将商品名称定义为唯一键。
+
+##### PriceHistory
+
+```go
+type PriceHistory struct {
+	ProductID uint      `json:"product_id" gorm:"column:product_id;type:int;not null;primary_key"`
+	Date      null.Time `json:"date" gorm:"column:date;type:date;not null;primary_key"`
+	Price     float64   `json:"price" gorm:"column:price;type:decimal(10,2);not null"`
+}
+```
+
+这里我们定义了商品的价格历史信息，包括商品 ID、日期、价格等信息。用户可以通过商品 ID 获取商品的历史价格信息。同时我们约束商品 ID、日期、价格等字段的非空性。
+
+##### Wishlist
+
+```go
+type Wishlist struct {
+	UserID    uint    `json:"user_id" gorm:"primaryKey"`
+	ProductID uint    `json:"product_id" gorm:"primaryKey"`
+	User      User    `gorm:"foreignKey:UserID"`
+	Product   Product `gorm:"foreignKey:ProductID"`
+}
+```
+
+这里我们定义了用户的心愿单信息，包括用户 ID、商品 ID 等信息。用户可以通过用户 ID获取用户的心愿单信息。同时我们约束用户 ID、商品 ID等字段的非空性。实际上，心愿单描述了用户和商品之间的多对多关系。
+
+### DAO 层
+
+DAO 层主要负责与数据库进行交互，对数据库进行增删改查等操作。这里我们使用了 GORM 进行数据库操作，因此 DAO 层的主要工作是初始化数据库连接，调用 GORM 的 API 进行数据库操作。
+
+#### 初始化数据库连接
+
+这里我们通过 viper 读取配置文件，获取数据库的连接信息，然后使用 GORM 连接数据库。同时我们使用了 GORM 的 `AutoMigrate` 方法，自动根据 Model 层的定义创建数据库表。这里还初始化了本项目中的电商平台信息。
+
+```go
+
+func InitDB() {
+	var cfg DBCfg
+	err := viper.Sub("Database").UnmarshalExact(&cfg)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	db, err = gorm.Open(mysql.Open(cfg.DSN), &gorm.Config{TranslateError: true, DisableForeignKeyConstraintWhenMigrating: true})
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	if err := db.AutoMigrate(&model.Wishlist{}, &model.Product{}, &model.User{}, &model.Platform{}, &model.PriceHistory{}); err != nil {
+		logrus.Fatal(err)
+	}
+
+	InitPlatform()
+
+	if viper.GetString("App.RunLevel") == "debug" {
+		db = db.Debug()
+	}
+
+}
+```
+
+#### 调用 GORM API
+
+这里我们定义了一个 `DBMS` 结构体，包含了 GORM 的 DB 对象，然后定义了一个 `DB` 函数，返回一个 `DBMS` 对象。
+
+```go
+type DBMS struct {
+	*gorm.DB
+}
+
+var (
+	db *gorm.DB
+)
+
+var DB = func(ctx context.Context) *DBMS {
+	return &DBMS{db.WithContext(ctx)}
+
+}
+```
+
+这样我们就可以在 DAO 层中调用 GORM 的 API，对数据库进行增删改查等操作。下面以 `Create` 方法为例介绍调用方法。
+
+```go
+dao.DB(ctx).Create(&product)
+```
+
+### Controller 层
+
+Controller 层是整个后端的核心，负责处理业务逻辑，调用 DAO 层和 Service 层进行数据操作。对每一个请求都有一个对应的 Controller 函数。
+
+#### 鉴权中间件
+
+我们使用 JWT 进行用户鉴权，保证了 API 的安全性。我们定义了一个 `AuthMidWare` 中间件，对需要鉴权的请求进行鉴权。
+
+##### Token 生成
+
+```go
+func generateToken(userID uint) (string, error) {
+	claims := AuthClaims{
+		userID,
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(Duration)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+```
+
+我们定义了一个 `generateToken` 函数，根据用户 ID 生成一个 JWT Token。Token 的有效期为 7 天。这里我们需要配置一个 secretKey，保证 Token 的安全性。同样通过 viper 读取配置文件，获取 secretKey。
+
+```go
+func InitSecret() {
+	var cfg secretCfg
+	if err := viper.Sub("Auth").UnmarshalExact(&cfg); err != nil {
+		panic(err)
+	}
+	secretKey = []byte(cfg.Secret)
+}
+```
+
+##### 鉴权中间件
+
+在鉴权中间件中，我们需要解析请求头中的 Token，然后验证 Token 的有效性。如果 Token 有效，我们将用户 ID 存入请求上下文中，供后续的请求使用。
+
+```go
+func parseToken(tokenString string) (*AuthClaims, error) {
+	claims := new(AuthClaims)
+	//parse token
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	//check validity of token
+	if claims, ok := token.Claims.(*AuthClaims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, err
+}
+
+func AuthMidWare() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//get token
+		tokenString, err := c.Cookie("token")
+		if err != nil {
+			dto.ResponseFail(c, stacktrace.NewErrorWithCode(dto.ErrNotLogin, "User not login."))
+			c.Abort()
+			return
+		}
+		//verify token
+		claims, err := parseToken(tokenString)
+		if err != nil {
+			dto.ResponseFail(c, err)
+			c.Abort()
+			return
+		}
+		//set userID in context
+		c.Set("userID", claims.UserID)
+		c.Next()
+
+	}
+}
+```
+
+#### User
+
+##### Login
+
+在用户登录时，我们需要验证用户的邮箱和密码是否正确。首先我们根据用户的邮箱查询用户信息，然后验证用户的密码是否正确。如果密码正确，我们调用鉴权模块生成一个 Token，将 Token 存入 Cookie 中，保证用户的登录状态。
+
+这里可以看到，我们通过 dao 层对数据库进行统一操作，并对响应的错误进行统一的处理，保证了后端逻辑的一致性。
+
+```go
+func (c *UserController) Login(ctx *gin.Context, req *dto.UserLoginReq) error {
+	user := model.User{
+		Email: req.Email,
+	}
+	// 1. check if user exists
+	err := dao.DB(ctx).Where(&user).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return stacktrace.PropagateWithCode(err, dto.ErrUserNotFound, "User not found.")
+		}
+		return err
+	}
+	// 2. check if password is correct
+	if user.Password != HashWithSHA256(req.Password) {
+		return stacktrace.NewErrorWithCode(dto.ErrPassword, "Wrong password.")
+	}
+	// 3. generate token
+	tokenString, err := generateToken(user.ID)
+	if err != nil {
+		return err
+	}
+	// 4. set token in cookie
+	setCookie(ctx, tokenString)
+	return nil
+}
+```
+
+##### Register
+
+在用户注册时，我们需要验证用户的邮箱是否已被注册。如果邮箱未被注册，我们将用户的信息存入数据库，完成注册。这里我们将用户的密码进行了哈希处理，保证了用户密码的安全性。
+
+```go
+func (c *UserController) Register(ctx *gin.Context, req *dto.UserRegisterReq) error {
+	tx := dao.DB(ctx)
+
+	user := model.User{
+		Email:    req.Email,
+		Password: HashWithSHA256(req.Password),
+		Name:     req.Name,
+	}
+	// check email format
+	pattern := `\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*` //匹配电子邮箱
+	reg := regexp.MustCompile(pattern)
+	if !reg.MatchString(user.Email) {
+		return stacktrace.NewError("Email format is wrong.")
+	}
+	err := tx.Create(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return stacktrace.PropagateWithCode(err, dto.ErrEmailExist, "Email already exists.")
+		}
+		return err
+	}
+
+	return nil
+}
+```
+
+##### Logout
+
+在用户登出时，我们需要清除用户的 Token，保证用户的登出状态即可。
+
+```go
+func (c *UserController) Logout(ctx *gin.Context) error {
+	ctx.SetCookie("token", "", -1, "/", "localhost", false, true)
+	return nil
+}
+```
+
+##### UpdateInfo, UpdatePwd, GetInfo
+
+这几个接口的实现逻辑类似，都是根据请求对数据库进行增删改查等操作，这里不再赘述。
+
+需要注意的是，这几个接口都需要鉴权，我们在路由配置中添加了鉴权中间件，保证了 API 的安全性。然后在 Controller 函数中，我们从请求上下文中获取用户 ID，保证了用户只能修改自己的信息。
+
+```go
+	userID := ctx.GetUint("userID")
+```
+
+#### Wishlist
+
+Wishlist 有 `Add`、`Delete`、`List`、`Clear` 等接口，这里我们以 `List` 接口为例介绍实现逻辑。
+
+`List` 接口的特点是有分页逻辑的处理，逻辑如下：
+
+1. 首先我们需要获取用户的 ID，根据用户 ID 查询用户的心愿单信息。
+2. 然后我们需要根据用户的心愿单信息查询商品的详细信息。
+3. 接着我们要利用 Count 方法获取心愿单的总数，然后根据页码和每页数量计算需要返回的心愿单条目索引，并利用 Limit 和 Offset 方法获取心愿单的分页信息。
+4. 最后我们将心愿单信息和商品信息组合返回。
+
+下面展示分页核心逻辑实现的部分代码。
+```go
+// get products
+tx := dao.DB(c).Model(&model.Product{}).Where("id IN (?)", pids)
+err = tx.Count(&resp.Total).Error
+if err != nil {
+    return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Failed to get wishlist")
+}
+if resp.Total == 0 {
+    return nil, stacktrace.NewErrorWithCode(dto.ErrEmptyWishlist, "Wishlist is empty")
+}
+if resp.Total < int64(req.PageNum*req.PageSize) {
+    return nil, stacktrace.NewErrorWithCode(dto.ErrInvalidPage, "Invalid page number")
+}
+err = tx.Offset(req.PageNum * req.PageSize).Limit(req.PageSize).Find(&products).Error
+if err != nil {
+    return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Failed to get wishlist")
+}
+```
+
+其余的接口实现均是对数据库的基本增删改查操作，这里不再赘述。
+
+#### Platform
+
+Platform 有 `List` 和 `Get` 接口，均是对数据库的基本增删改查操作，这里不再赘述。
+
+#### Product
+
+Product 系列接口是整个后端的核心，包括了商品搜索、商品价格获取、商品历史价格走势等功能。
+
+##### GetInfo
+
+这个接口获取商品详细信息，只需要根据商品 ID 查询商品信息即可，此处不再赘述。
+
+##### Search
+
+这个接口是商品搜索的核心，需要调用爬虫模块获取商品信息，然后添加到数据库中。首先调用 Service 层的 `Search` 函数，获取商品信息，然后将商品信息添加到数据库中。需要注意的是我们既需要添加新商品，也需要更新商品的价格信息。
+
+```go
+// search from search engine
+searchResult, err := SearchEngine(req.Keyword)
+if err != nil {
+    return err
+}
+// add to database
+for _, item := range searchResult {
+    newProduct := model.Product{
+        Name:       item.Title,
+        Picture:    item.Image,
+        URL:        item.URL,
+        PlatformID: item.PlatformID,
+    }
+    err := dao.DB(c).Create(&newProduct).Error
+    if err != nil {
+        newProduct.URL = ""
+        newProduct.Picture = ""
+        err = dao.DB(c).Where(&newProduct).First(&newProduct).Error
+        if err != nil {
+            continue
+        }
+    }
+    newPriceHistory := model.PriceHistory{
+        ProductID: newProduct.ID,
+        Date:      null.NewTime(time.Now(), true),
+        Price:     item.Price,
+    }
+    err = dao.DB(c).Create(&newPriceHistory).Error
+    if err != nil {
+        continue
+    }
+}
+```
+
+##### GetList
+
+这个接口是获取商品列表的核心，需要根据页码和每页数量获取商品列表。首先我们需要获取商品的总数，然后根据页码和每页数量计算需要返回的商品索引，并利用 Limit 和 Offset 方法获取商品的分页信息。此处的逻辑与 Wishlist 中的分页逻辑类似，这里不再赘述。
+
+这里需要注意的是，需要对商品名称进行模糊查询，保证了搜索的准确性。
+
+```go
+for _, keyword := range keywords {
+    tx = tx.Where("name LIKE ?", "%"+keyword+"%")
+}
+```
+
+同时我们还需要从 PriceHistory 表中获取商品的最新价格信息，保证了商品价格的准确性。
+
+```go
+var history model.PriceHistory
+err := dao.DB(c).Model(&model.PriceHistory{}).Where("product_id = ?", item.ID).Order("date desc").First(&history).Error
+if err != nil {
+    return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Database error")
+}
+```
+
+##### GetHistory
+
+这个接口是获取商品历史价格走势的核心，需要根据商品 ID 和指定日期范围获取商品的历史价格信息。首先我们需要获取商品的历史价格信息，然后根据日期范围筛选商品的历史价格信息。需要注意的是我们需要检查日期范围是否合法，并利用范围查找方法获取商品的历史价格信息。
+
+```go
+// query validation
+if req.StartDate.Time.After(req.EndDate.Time) {
+    return nil, stacktrace.NewErrorWithCode(dto.ErrInvalidRequest, "Invalid date range")
+}
+
+err := dao.DB(c).Where("product_id = ? AND date >= ? AND date <= ?", req.ProductId, req.StartDate, req.EndDate).Find(&history).Error
+if err != nil {
+    return nil, stacktrace.PropagateWithCode(err, dto.ErrProductNotFound, "Product not found")
+}
+```
+
+### Service 层
+
+在 Service 层中，我们将一些复杂的业务逻辑封装成一个个的服务，供 Controller 层调用。这里我们主要包括爬虫服务，价格轮询和邮件推送服务。
+
+#### Scraper
+
+首先我们需要从配置中读取爬虫的配置信息，初始化爬虫服务。
+
+```go
+type ScraperConfig struct {
+	Host string
+}
+
+func InitScraper() {
+	var cfg ScraperConfig
+	err := viper.Sub("Scraper").Unmarshal(&cfg)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	scraper = newScraper(cfg.Host)
+}
+```
+
+在爬虫服务中，我们提供了两个接口，分别是 `Search` 和 `Poll`。`Search` 接口用于搜索商品信息，`Poll` 接口用于获取商品价格信息。
+
+两者的逻辑类似，都是向指定的 URL 发送请求，并解析对应的相应信息。下面以 `Search` 接口为例展示实现逻辑。
+
+```go
+func (s *Scraper) Search(keyword string) (*dto.SearchResp, error) {
+	var rawResp dto.SearchResp
+	// send http request to search engine
+	url := s.GetHost() + "/scraper/search?keyword=" + keyword
+	httpResp, err := http.Get(url)
+	if err != nil {
+		return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Search engine error")
+	}
+	defer httpResp.Body.Close()
+	err = json.NewDecoder(httpResp.Body).Decode(&rawResp)
+	if err != nil {
+		return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Search engine error")
+	}
+	return &rawResp, nil
+}
+```
+
+#### Polling
+
+Polling 服务用于定时获取商品价格信息，我们使用了 `time.Ticker` 定时器，每隔一段时间获取一次商品价格信息。
+
+```go
+func InitPolling(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+
+	go func() {
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				Polling()
+			}
+		}
+	}()
+}
+```
+
+而我们的 Polling 时间间隔也是从配置文件中读取的。
+
+```go
+func InitService() {
+	var cfg Cfg
+	err := viper.Sub("Service").UnmarshalExact(&cfg)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	InitPolling(time.Duration(cfg.PollingInterval) * time.Hour)
+}
+```
+
+这里的核心逻辑是 `Polling` 函数的实现，它的实现逻辑如下：
+
+1. 从 Wishlist 表中获取所有的商品 ID。
+2. 遍历商品 ID，调用爬虫服务的 `Poll` 接口，获取商品价格信息。
+3. 将商品价格信息添加到 PriceHistory 表中。
+4. 维护一个用户 ID 到商品 ID 列表的映射，如果该商品价格低于用户的心愿价格，添加到邮件推送列表中。
+5. 调用邮件推送服务，向用户发送邮件推送消息。
+
+此处省略具体实现代码，完整细节请参考源码。
+
+#### Email
+
+Email 服务用于向用户发送邮件推送消息，我们使用了 `net/smtp` 库进行邮件发送。
+
+首先我们需要初始化邮件服务，读取邮件的配置信息。
+
+```go
+type EmailCfg struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+}
+
+var cfg EmailCfg
+err := viper.Sub("Email").UnmarshalExact(&cfg)
+if err != nil {
+    logrus.Fatal(err)
+}
+```
+
+然后我们需要根据传递的推送数据，构造邮件内容。
+
+```go
+func createEmailContent(notices []DiscountNoticeItem) string {
+	// create Subject
+	subject := "Subject: 商品降价通知\n"
+
+	// create Body
+	var bodyBuilder strings.Builder
+	bodyBuilder.WriteString("亲爱的用户，\n\n")
+	bodyBuilder.WriteString("以下是您关注的商品降价信息：\n\n")
+	bodyBuilder.WriteString("商品名称\t\t原价\t\t降价后价\t降幅\n")
+
+	// generate email content
+	for _, p := range notices {
+		discount := p.OldPrice - p.NewPrice
+		discountPercentage := (discount / p.OldPrice) * 100
+		bodyBuilder.WriteString(fmt.Sprintf("%s\t%.2f\t%.2f\t%.2f%%\n", p.Name, p.OldPrice, p.NewPrice, discountPercentage))
+	}
+
+	bodyBuilder.WriteString("\n祝您购物愉快！\n")
+
+	// return email content
+	return subject + "\n" + bodyBuilder.String()
+}
+```
+
+最后我们需要调用 `net/smtp` 库发送邮件。
+
+```go
+from := cfg.User
+password := cfg.Password
+smtpHost := cfg.Host
+smtpPort := fmt.Sprintf("%d", cfg.Port)
+// auth
+auth := smtp.PlainAuth("", from, password, smtpHost)
+
+// send email
+err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{to}, []byte(emailContent))
+if err != nil {
+    return err
+}
+```
+
+至此，我们完成了后端的设计，实现了用户的登录、注册、商品搜索、商品详情、心愿单等功能，保证了后端的逻辑一致性。
+
 ## 爬虫设计
 
-## 部署与测试
+爬虫的架构较为简单，主要分为服务层和爬虫层两部分。由于爬虫的实现逻辑较为简单，主要的开发时间都花费在 HTML 内容解析这类 dirty work 上，因此这里不再过多赘述详细的实现逻辑，详细细节请参考源码。
+
+在最初设计时，原本计划对国内电商平台进行爬取，但是由于国内电商平台的反爬机制较为严格，因此我们最终选择了国外电商平台 Amazon 和 Ebay 进行爬取。
+
+##### 爬虫层
+
+爬虫层主要负责爬取商品信息，包括商品名称、商品价格、商品图片、商品链接等信息。这里我们使用了 Python 的 requests 库和 BeautifulSoup 库进行爬取。通过 requests 库发送 HTTP 请求，获取网页的 HTML 内容，然后通过 BeautifulSoup 库解析 HTML 内容，获取商品信息。
+
+这里我设计了两个类，分别是 AmazonParser 和 EbayParser，分别用于爬取 Amazon 和 Ebay 的商品信息。这两个类都提供了 `Search` 和 `Poll` 接口，分别用于搜索商品信息和获取商品价格信息。
+
+每一个接口内部的逻辑是类似的，都是向指定的 URL 发送请求，然后解析对应的相应信息。这里以 `Search` 接口为例展示实现逻辑。
+
+```python
+    def search(self, keyword) -> list:
+        url = self.search_url + keyword
+        print(keyword)
+        print(url)
+        html = utils.fetch_page(url)
+        result_list = self.get_result_list(html)
+        res_list = [self.parse_result(result) for result in result_list]
+        res_list = [res for res in res_list if res]
+        return res_list
+```
+
+首先我们需要构造搜索的 URL，然后发送 HTTP 请求，获取网页的 HTML 内容。接着我们需要解析 HTML 内容，获取商品列表中的每一个商品元素，然后解析商品元素，获取商品信息。
+
+对于商品信息的解析，我们需要根据 HTML 内容的结构，使用 BeautifulSoup 库解析 HTML 内容，找到对应的元素进行解析，最终获取商品信息。具体的解析逻辑这里不再赘述，详细细节请参考源码。
+
+##### 服务层
+
+服务层主要负责调用爬虫层，获取商品信息。这里我们使用了 Flask 框架，提供了两个接口，分别是搜索接口和轮询接口。搜索接口用于搜索商品信息，轮询接口用于获取商品价格信息。
+
+首先我模仿了后端的设计，同样定义了统一的响应格式，保证了 API 的一致性。
+
+```python
+class SearchResponse:
+    def __init__(self, code, msg, products):
+        self.code = code
+        self.msg = msg
+        self.data = products
+
+    def to_dict(self):
+        return {
+            'code': self.code,
+            'msg': self.msg,
+            'data': self.data
+        }
+
+class PollResponse:
+    def __init__(self, code, msg, price):
+        self.code = code
+        self.msg = msg
+        self.data = price if price else None
+        
+    def to_dict(self):
+        return {
+            'code': self.code,
+            'msg': self.msg,
+            'data': self.data
+        }
+```
+
+然后在 Flask 中绑定两个路由，并在每个 handler 中分别调用爬虫层的接口，获取商品信息。不同的是，Search 需要分别调用 AmazonParser 和 EbayParser 的 Search 接口，获取商品信息，而 Poll 只需要根据 URL 调用对应的 Parser 的 Poll 接口即可。
+
+```python
+def search_handler(keyword: str) -> SearchResponse:
+    results = []
+    keyword = keyword.replace(' ', '+')
+    # search for amazon
+    amazon_parser = AmazonParser()
+    amazon_results = amazon_parser.search(keyword)
+    results.extend(amazon_results)
+    # search for ebay
+    ebay_parser = EBayParser()
+    ebay_results = ebay_parser.search(keyword)
+    results.extend(ebay_results)
+    return SearchResponse(200, 'Success', results)
+```
+
+```python
+def poll_handler(url):
+    if 'amazon' in url:
+        parser = AmazonParser()
+        price = parser.poll(url)
+        if price < 0:
+            return PollResponse(400, 'Failed', -1)
+        return PollResponse(200, 'Success', price)
+    elif 'ebay' in url:
+        parser = EBayParser()
+        price = parser.poll(url)
+        if price < 0:
+            return PollResponse(400, 'Failed', None)
+        return PollResponse(200, 'Success', price)
+    else:
+        return PollResponse(400, 'Bad request', None)
+```
+
+## 部署
+
+我使用 Docker Compose 进行部署，将整个项目分为四个容器，分别是数据库容器、后端容器、前端容器和爬虫容器。
+
+### 数据库容器
+
+数据库容器基于 MySQL 构建，不需要额外的 Dockerfile，只需要在 docker-compose.yml 中配置即可。通过环境变量设置 MySQL 的 root 密码、数据库名称、普通用户名称和密码，然后将 MySQL 的 3306 端口映射到宿主机的 3306 端口，最后将 MySQL 的数据目录映射到宿主机的目录中。
+
+```yaml
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password # 设置 root 密码
+      MYSQL_DATABASE: disfinder # 创建名为 disfinder 的数据库
+      MYSQL_USER: disfinder # 创建一个名为 disfinder 的普通用户
+      MYSQL_PASSWORD: disfinder_passwd # 设置该用户的密码
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+```
+
+### 后端容器
+
+后端容器基于 Golang 构建，我们将源码复制到容器中，然后编译生成可执行文件。
+
+```dockerfile
+# 使用 Go 官方镜像
+FROM golang:1.23-alpine
+
+WORKDIR /app
+
+# 将 Go 源码复制到容器
+COPY . .
+
+# 安装依赖并编译 Go 后端
+RUN go mod tidy && go build -o main .
+
+# 暴露 Go 后端服务端口
+EXPOSE 8080
+
+CMD ["./main"]
+```
+
+在 docker-compose.yml 中配置后端容器，将后端服务的 8080 端口映射到宿主机的 8081 端口。需要注意的是，前端访问的是后端容器映射到宿主机的 8081 端口。
+
+```yaml
+  backend:
+    build:
+      context: ./backend # 指定 Go 后端目录
+    depends_on:
+      - mysql
+    ports:
+      - "8081:8080"
+```
+
+### 前端容器
+
+前端容器基于 Node 构建，我们将源码复制到容器中，然后安装依赖，并以生产模式构建 Next.js 前端，编译生成静态文件后，启动 Next.js 前端服务。
+
+```dockerfile
+# 使用 Node.js 官方镜像
+FROM node:20.17.0-alpine
+
+WORKDIR /app
+
+# 复制并安装前端依赖
+COPY . .
+RUN npm install
+
+# 构建 Next.js 前端
+RUN npm run build
+
+# 暴露端口
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
+
+在 docker-compose.yml 中配置前端容器，将前端服务的 3000 端口映射到宿主机的 3010 端口。在最终访问时，浏览器访问的是前端容器映射到宿主机的 3010 端口。
+
+```yaml
+  frontend:
+    build:
+      context: ./frontend # 指定 Next.js 前端目录
+    ports:
+      - "3010:3000"
+```
+
+### 爬虫容器
+
+爬虫容器基于 Python 构建，我们将源码复制到容器中，然后安装依赖，最后启动 Flask 服务。
+
+```dockerfile
+# 使用 Python 官方镜像
+FROM python:3.13-alpine
+
+WORKDIR /app
+
+# 复制并安装爬虫的依赖
+COPY . .
+RUN pip install -r requirements.txt
+
+EXPOSE 8888
+
+# 启动爬虫
+CMD ["python", "server.py"]
+```
+
+在 docker-compose.yml 中配置爬虫容器，将爬虫服务的 8888 端口映射到宿主机的 8889 端口。
+
+```yaml
+  scraper:
+    build:
+      context: ./scraper # 指定 Python 爬虫目录
+    depends_on:
+      - backend
+    command: [ "python", "server.py" ]
+    ports:
+      - "8002:8888"
+```
+
+### 各容器间的通信
+
+需要注意的是在 docker-compose 中，各容器通过服务名在 docker compose 的网络中通信，因此我们需要修改好各模块的配置文件，从而保证各模块能够正确访问到其他模块。
+
+在后端中，我们需要修改配置文件，将数据库的地址修改为数据库容器的服务名，并将爬虫的地址修改为爬虫容器的服务名。
+
+```yaml
+Database:
+  DSN: disfinder:disfinder_passwd@tcp(mysql)/disfinder?charset=utf8mb4&parseTime=True&loc=Local
+Database_test:
+  DSN: disfinder:disfinder_passwd@tcp(mysql)/disfinder?charset=utf8mb4&parseTime=True&loc=Local
+Scraper:
+  Host: "http://scraper:8888"
+```
+
+在前端中，我们需要修改配置文件，将后端的端口修改为后端容器映射到宿主机的 8081 端口。
+
+```yaml
+NEXT_PUBLIC_API_URL=http://localhost:8081
+```
+
+在爬虫中，我们需要修改 Flask 的监听 host，将其更改为 0.0.0.0，从而允许后端容器访问爬虫容器。
+
+```python
+if __name__ == '__main__':
+    app.run(debug=False, port=8888, host="0.0.0.0")
+```
 
 ## 使用文档
+
+### 如何部署
+
+### 如何使用
 
 ## 感想与总结

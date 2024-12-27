@@ -16,12 +16,6 @@ services:
   backend:
     build:
       context: ./backend # 指定 Go 后端目录
-    environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: example
-      DB_NAME: disfinder
     depends_on:
       - mysql
     ports:
