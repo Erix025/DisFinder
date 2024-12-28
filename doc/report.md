@@ -191,6 +191,8 @@ frontend/src
 
 ##### 设计思路
 
+
+
 Navbar 是整个网站的核心导航栏，包含了 Logo、视觉模式切换、心愿单入口、用户管理入口等。
 
 Logo 是网站的标志，点击 Logo 可以回到首页。此处导航使用了 Next.js 的 Router，通过 `useRouter` 和 `push` 方法实现页面跳转。同时这里我自主设计了一个 Logo，通过 SVG 图片实现。
@@ -667,6 +669,18 @@ func setupUserController(r *gin.RouterGroup) {
 	p.POST("/info", controller.AuthMidWare(), cw.UpdateInfo)
 	p.POST("/passwd", controller.AuthMidWare(), cw.UpdatePwd)
 }
+```
+
+此处需要额外说明的是，由于前端域名和后端域名不一致，因此我们需要配置跨域访问（CORS）。在这里我们使用 `gin-contrib/cors` 配置跨域访问中间件，允许指定来源的请求。
+
+```go
+config := cors.Config{
+    AllowOrigins:     []string{"http://localhost:3010", "http://localhost"},
+    AllowCredentials: true,
+    AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+    AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
+}
+e.Use(cors.New(config))
 ```
 
 ### Model 层
@@ -1503,6 +1517,74 @@ if __name__ == '__main__':
 
 ### 如何部署
 
+运行以下命令，即可启动整个项目。
+
+```bash
+docker-compose up --build
+```
+
+需要注意的是，在实际使用过程中可能会出现后端没有正常连接到数据库的情况，这是因为数据库容器启动需要一定的时间，而后端容器启动较快，因此可能会出现连接不上数据库的情况。这时我们可以重启后端容器，等待数据库容器启动完成后，后端容器会自动重连数据库。
+
 ### 如何使用
 
+#### 用户管理
+
+![主界面](assets/report/homepage.png)
+
+在主界面如果没有登录，右上角会出现登录按钮，点击登录按钮即可进入登录页面。
+
+![登录界面](assets/report/login_page.png)
+
+![注册界面](assets/report/register_page.png)
+
+在登陆界面可以输入账号密码进行登录，如果没有账号可以点击注册进行注册。
+
+![登陆后的主界面](assets/report/homepage_logon.png)
+
+登录之后会默认返回主界面。可以看到右上角的登录按钮变成了用户头像（默认头像），点击头像可以打开下拉菜单，可以点击退出登录退出登录，也可以点击用户名称进入用户信息页面。
+
+![用户界面](assets/report/user_page.png)
+
+在用户界面可以看到用户的基本信息，可以修改用户的基本信息，也可以修改用户的密码。
+
+![修改用户名](assets/report/change_user_info.png)
+
+![修改密码](assets/report/change_password.png)
+
+#### 商品搜索
+
+![搜索商品](assets/report/search.png)
+
+在主界面的搜索框中输入关键词，点击搜索按钮即可搜索商品。可以看到搜索按钮变成了加载中的状态，表示正在搜索商品。
+
+![搜索结果](assets/report/search_result.png)
+
+搜索完成后，会显示搜索结果，可以看到商品的名称、价格、图片，页面底部有分页按钮，可以翻页查看更多商品。点击商品图片或者商品名称可以查看商品的详细信息。
+
+![商品详情](assets/report/product_page.png)
+
+在商品详情页面可以看到商品的详细信息，包括商品的名称、价格、图片等信息。同时可以看到商品的历史价格走势，可以查看商品的历史价格信息。
+
+同时此处有两个功能按钮，一个按钮可以将商品添加到心愿单，另一个按钮可以跳转到商品的原平台页面。
+
+#### 心愿单管理
+
+在登陆后点击顶部菜单栏的心愿单按钮，可以查看心愿单中的商品。点击心愿单中的商品可以跳转到商品的详细信息页面。同时可以点击商品旁的删除按钮将商品从心愿单中删除，或者点击清空按钮清空心愿单。
+
+![心愿单页面](assets/report/wishlist_page.png)
+
+#### 夜间模式
+
+在主界面右上角有一个夜间模式按钮，点击按钮可以切换夜间模式。
+
+![夜间模式](assets/report/nightmode.png)
+
 ## 感想与总结
+
+在本次项目中，我完成了从一个需求开始，经过设计、开发、测试、部署的全流程，构建了一个自己的 B/S 体系项目。同时在这个项目中，我不断尝试使用更贴近生产实际的技术栈，如 Next.js、Golang、Docker 等，提升了自己的技术水平和工程能力，为今后的工作和学习打下了坚实的基础。
+
+同时在这个项目中，我也遇到了很多问题，如数据库连接问题、跨域访问问题、Docker 部署问题、爬虫反爬问题等，这些问题都是在实际开发中经常遇到的问题，通过解决这些问题，我不断提升了自己的解决问题的能力，也更加明白实际生产环境的复杂性。
+
+当然我也对这个项目和选题有一个建议，就是我觉得本次项目的难点其实反而在于爬虫模块，因为爬虫模块的实现逻辑较为复杂，需要对 HTML 内容进行解析，而且国内电商平台的反爬机制较为严格，因此我建议在选题时可以考虑更多的是后端和前端的设计，而将爬虫模块作为一个附加模块，这样可以更加专注于后端和前端的设计，更好地达到课程考核的目的。
+
+最后非常感谢能有这样一个机会让我在实际项目的实践中学到许多技术和经验，感谢老师的付出 :)
