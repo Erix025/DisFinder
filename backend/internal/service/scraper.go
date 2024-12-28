@@ -6,6 +6,7 @@ import (
 	"disfinder-backend/utils/stacktrace"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -13,7 +14,6 @@ import (
 
 type Scraper struct {
 	host string
-	port int
 }
 
 var (
@@ -51,7 +51,7 @@ func (s *Scraper) GetHost() string {
 func (s *Scraper) Search(keyword string) (*dto.SearchResp, error) {
 	var rawResp dto.SearchResp
 	// send http request to search engine
-	url := s.GetHost() + "/scraper/search?keyword=" + keyword
+	url := s.GetHost() + "/scraper/search?keyword=" + strings.ReplaceAll(keyword, " ", "+")
 	httpResp, err := http.Get(url)
 	if err != nil {
 		return nil, stacktrace.PropagateWithCode(err, dto.InternalError, "Search engine error")
