@@ -191,7 +191,7 @@ frontend/src
 
 ##### 设计思路
 
-
+![主界面示意图](assets/report/homepage.png)
 
 Navbar 是整个网站的核心导航栏，包含了 Logo、视觉模式切换、心愿单入口、用户管理入口等。
 
@@ -261,8 +261,6 @@ useEffect(() => {
 
 #### SearchBox
 
-// TODO: SearchBox 图片
-
 ##### 设计思路
 
 SearchBox 是一个搜索框，用户可以在搜索框中输入商品名称，然后点击搜索按钮进行搜索。搜索框的设计主要包括输入框和搜索按钮两部分。
@@ -304,6 +302,8 @@ SearchBox 组件的核心逻辑是搜索功能的实现。用户在输入框中�
 
 ##### 设计思路
 
+![商品搜索结果界面](assets/report/search_result.png)
+
 ProductSearch 页面是商品搜索结果展示页面，用户在搜索框中输入商品名称后，会跳转到该页面，展示搜索结果。搜索结果主要包括商品名称、商品价格、商品图片等信息。
 
 搜索结果是一个列表，每个列表项包括商品名称、商品价格、商品图片等信息。这里使用了 NextUI 提供的 `Card` 组件，实现了列表项的展示。能够正确展示商品名称、价格、图片等信息。同时我们考虑到了商品名称过长的情况，实现了商品名称的截断显示。
@@ -338,7 +338,7 @@ const handlePageChange = (prev: number) => {
 
 #### ProductDetail
 
-// TODO: ProductDetail 图片
+![商品详情页面](assets/report/product_page.png)
 
 ##### 设计思路
 
@@ -395,7 +395,7 @@ setData(new_data);
 
 ##### 设计思路
 
-// TODO: UserCenter 图片
+![用户中心界面](assets/report/user_page.png)
 
 UserCenter 页面是用户中心页面，用户可以在该页面查看用户信息、修改密码、退出登录等操作。
 
@@ -442,7 +442,7 @@ const handleSaveUsername = async () => {
 
 ##### 设计思路
 
-// TODO: Wishlist 图片
+![心愿单界面](assets/report/wishlist_page.png)
 
 Wishlist 页面是心愿单页面，用户可以在该页面查看用户关注的商品信息、取消关注商品等操作。
 
@@ -1579,7 +1579,13 @@ docker-compose up --build
 
 在主界面右上角有一个夜间模式按钮，点击按钮可以切换夜间模式。
 
-![夜间模式](assets/report/nightmode.png)
+![夜间模式](assets/report/night_mode.png)
+
+#### 移动端适配
+
+在设计时我们考虑了移动端的适配，可以看到在移动端上，我们的页面可以很好地适配移动端的屏幕，保证了用户的体验。
+
+![移动端适配效果展示](assets/report/mobile.png)
 
 ## 感想与总结
 
