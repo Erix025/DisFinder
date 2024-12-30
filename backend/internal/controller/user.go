@@ -8,10 +8,11 @@ import (
 	"disfinder-backend/utils/stacktrace"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"hash"
 	"regexp"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type IUserController interface {
@@ -46,7 +47,6 @@ func (c *UserController) Register(ctx *gin.Context, req *dto.UserRegisterReq) er
 	pattern := `\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*` //匹配电子邮箱
 	reg := regexp.MustCompile(pattern)
 	if !reg.MatchString(user.Email) {
-		//TODO: return error code
 		return stacktrace.NewError("Email format is wrong.")
 	}
 	err := tx.Create(&user).Error

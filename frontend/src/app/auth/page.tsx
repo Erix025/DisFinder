@@ -97,6 +97,11 @@ export default function AuthPage() {
             setIsLoading(false);
             return;
         }
+        if (password.length < 6) {
+            alert("Password must be at least 6 characters");
+            setIsLoading(false);
+            return;
+        }
         // check email format
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         if (!emailRegex.test(email)) {

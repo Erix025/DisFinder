@@ -15,6 +15,16 @@ const SearchBox = () => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
+    const formatQuery = (query: string) => {
+        // remove leading and trailing spaces
+        query = query.trim();
+        // replace multiple spaces with one space
+        query = query.replace(/\s+/g, ' ');
+        // replace space with '+'
+        query = query.replace(/ /g, '+');
+        return query;
+    }
+
     const fetchSearch = async () => {
         const response = await fetch(`${apiUrl}/api/product/search?keyword=${query}`, {
             method: 'POST',
@@ -59,7 +69,7 @@ const SearchBox = () => {
                     size='lg'
                     radius="lg"
                     onKeyDown={handleKeyDown}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => setQuery(formatQuery(e.target.value))}
                     disabled={isLoading}
                     classNames={{
                         label: "text-black/50 dark:text-white/90",

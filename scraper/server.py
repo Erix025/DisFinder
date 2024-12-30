@@ -69,7 +69,7 @@ def poll_handler(url):
     else:
         return PollResponse(400, 'Bad request', None)
 
-@app.route('/scraper/poll', methods=['POST'])
+@app.route('/scraper/polling', methods=['POST'])
 def spider_poll():
     url = request.json.get('url')
     if not url:
